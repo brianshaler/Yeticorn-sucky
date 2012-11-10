@@ -18,8 +18,8 @@ module.exports = class Application extends Backbone.Model
     @socket.on 'intro.show', =>
       console.log 'show'
       @intro()
-    @socket.on 'gameSetup.show', (id) ->
-      window.location.hash = id
+    @socket.on 'gameSetup.show', (id) =>
+      @gameSetup()
 
   intro: ->
     @introView = new IntroView
@@ -38,3 +38,8 @@ module.exports = class Application extends Backbone.Model
 
   enteredName: ->
     @socket.emit 'playerSetup.submit', @playerSetupView.getName()
+
+  gameSetup: ->
+    window.location.hash = id
+    @gameSetupView = new GameSetupView()
+    @gameSetupView.render()

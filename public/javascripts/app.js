@@ -112,7 +112,7 @@ window.require.define({"application": function(exports, require, module) {
         return _this.intro();
       });
       return this.socket.on('gameSetup.show', function(id) {
-        return window.location.hash = id;
+        return _this.gameSetup();
       });
     };
 
@@ -140,6 +140,12 @@ window.require.define({"application": function(exports, require, module) {
 
     Application.prototype.enteredName = function() {
       return this.socket.emit('playerSetup.submit', this.playerSetupView.getName());
+    };
+
+    Application.prototype.gameSetup = function() {
+      window.location.hash = id;
+      this.gameSetupView = new GameSetupView();
+      return this.gameSetupView.render();
     };
 
     return Application;
@@ -240,7 +246,7 @@ window.require.define({"views/intro_view": function(exports, require, module) {
 
     IntroView.prototype.template = template;
 
-    IntroView.prototype.className = 'intro';
+    IntroView.prototype.className = 'intro setup';
 
     IntroView.prototype.events = {
       'click .play': 'onClickedPlay'
@@ -281,7 +287,7 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
 
     PlayerSetupView.prototype.template = template;
 
-    PlayerSetupView.prototype.className = 'player-setup';
+    PlayerSetupView.prototype.className = 'player-setup setup';
 
     PlayerSetupView.prototype.events = {
       'submit form': 'submitForm'
@@ -332,7 +338,7 @@ window.require.define({"views/templates/intro": function(exports, require, modul
     var foundHelper, self=this;
 
 
-    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<a href=\"#\" class=\"play\">Play!</a>";});
+    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n</form>";});
 }});
 
 window.require.define({"views/templates/player_setup": function(exports, require, module) {

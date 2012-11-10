@@ -2,7 +2,7 @@ template = require 'views/templates/intro'
 
 module.exports = class IntroView extends Backbone.View
   template: template
-  className: 'intro'
+  className: 'intro setup'
   events:
     'click .play': 'onClickedPlay'
 

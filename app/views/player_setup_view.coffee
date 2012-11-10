@@ -2,7 +2,7 @@ template = require 'views/templates/player_setup'
 
 module.exports = class PlayerSetupView extends Backbone.View
   template: template
-  className: 'player-setup'
+  className: 'player-setup setup'
   events:
     'submit form': 'submitForm'
 
