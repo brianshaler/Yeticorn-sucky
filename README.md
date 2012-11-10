@@ -38,6 +38,19 @@ jitsu login --username nko3-yeticorn --password jj9frQNb1PLNjwd4
 jitsu deploy
 ~~~
 
+### MongoLab
+
+~~~yaml
+account:
+  name: yeticorn
+  username: yeti
+  password: "~Green{MULE}#483]"
+database:
+  name: yeticorn
+  username: corecorn
+  password: "C0C0NZT#&Lime)<33"
+~~~
+
 ## Tips
 
 ### Vote KO Widget
