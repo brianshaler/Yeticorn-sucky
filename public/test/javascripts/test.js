@@ -74,113 +74,45 @@
   globals.require.brunch = true;
 })();
 
-window.require.define({"test/models/header_test": function(exports, require, module) {
-  var Header;
+window.require.define({"test/controllers/game_controller_test": function(exports, require, module) {
+  var Game;
 
-  Header = require('models/header');
+  Game = require('controllers/game');
 
-  describe('Header', function() {
-    beforeEach(function() {
-      return this.model = new Header();
-    });
-    afterEach(function() {
-      return this.model.dispose();
-    });
-    return it('should contain 4 items', function() {
-      return expect(this.model.get('items')).to.have.length(4);
+  describe('Game', function() {
+    return beforeEach(function() {
+      return this.controller = new Game();
     });
   });
   
 }});
 
-window.require.define({"test/test-helpers": function(exports, require, module) {
-  var chai, sinonChai;
+window.require.define({"test/models/game_test": function(exports, require, module) {
+  var Game;
 
-  chai = require('chai');
+  Game = require('models/game');
 
-  sinonChai = require('sinon-chai');
-
-  chai.use(sinonChai);
-
-  module.exports = {
-    expect: chai.expect,
-    sinon: require('sinon')
-  };
-  
-}});
-
-window.require.define({"test/views/header_view_test": function(exports, require, module) {
-  var Header, HeaderView, HeaderViewTest, mediator,
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-  mediator = require('mediator');
-
-  Header = require('models/header');
-
-  HeaderView = require('views/header_view');
-
-  HeaderViewTest = (function(_super) {
-
-    __extends(HeaderViewTest, _super);
-
-    function HeaderViewTest() {
-      return HeaderViewTest.__super__.constructor.apply(this, arguments);
-    }
-
-    HeaderViewTest.prototype.renderTimes = 0;
-
-    HeaderViewTest.prototype.render = function() {
-      HeaderViewTest.__super__.render.apply(this, arguments);
-      return this.renderTimes += 1;
-    };
-
-    return HeaderViewTest;
-
-  })(HeaderView);
-
-  describe('HeaderView', function() {
-    beforeEach(function() {
-      this.model = new Header();
-      return this.view = new HeaderViewTest({
-        model: this.model
-      });
-    });
-    afterEach(function() {
-      this.view.dispose();
-      return this.model.dispose();
-    });
-    it('should display 4 links', function() {
-      return expect(this.view.$el.find('a')).to.have.length(4);
-    });
-    return it('should re-render on login event', function() {
-      expect(this.view.renderTimes).to.equal(1);
-      mediator.publish('loginStatus');
-      return expect(this.view.renderTimes).to.equal(2);
+  describe('Game', function() {
+    return beforeEach(function() {
+      return this.model = new Game();
     });
   });
   
 }});
 
-window.require.define({"test/views/home_page_view_test": function(exports, require, module) {
-  var HomePageView;
+window.require.define({"test/views/game_view_test": function(exports, require, module) {
+  var GameView;
 
-  HomePageView = require('views/home_page_view');
+  GameView = require('views/game_view');
 
-  describe('HomePageView', function() {
-    beforeEach(function() {
-      return this.view = new HomePageView();
-    });
-    afterEach(function() {
-      return this.view.dispose();
-    });
-    return it('should auto-render', function() {
-      return expect(this.view.$el.find('img')).to.have.length(1);
+  describe('GameView', function() {
+    return beforeEach(function() {
+      return this.view = new GameView();
     });
   });
   
 }});
 
-window.require('test/models/header_test');
-window.require('test/views/header_view_test');
-window.require('test/views/home_page_view_test');
+window.require('test/controllers/game_controller_test');
+window.require('test/models/game_test');
+window.require('test/views/game_view_test');

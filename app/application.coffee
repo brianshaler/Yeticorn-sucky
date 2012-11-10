@@ -1,4 +1,6 @@
 HomePageView = require 'views/home_page_view'
+Game = require 'models/game'
+GameView = require 'views/game_view'
 
 # The application object
 module.exports = class Application extends Backbone.Model
@@ -7,7 +9,9 @@ module.exports = class Application extends Backbone.Model
     @enteredName = _.once @enteredName
 
   start: ->
-    @goHome()
+    @viewport = new Viewporter 'outer-container'
+    #@goHome()
+    @showGame()
     @connectSocket()
 
   goHome: ->
@@ -15,6 +19,11 @@ module.exports = class Application extends Backbone.Model
     @homePageView.render()
     @homePageView.on 'entered name', =>
       @enteredName()
+
+  showGame: ->
+    @model = new Game()
+    @gameView = new GameView({@model})
+    @gameView.render()
 
   connectSocket: ->
     @socket = io.connect window.location.href

@@ -1,0 +1,18 @@
+@import 'nib'
+
+.game-page
+  position: absolute
+  transform: translate3d(0px, 0px, 0px)
+  transform-origin: 0 0
+  .game-board
+    position: absolute
+    transform-origin: 0 0
+  .game-tile
+    position: absolute
+    width: 240px
+    height: 210px
+    background: transparent url('/images/tile_bg.png') top left no-repeat;
+    span
+      font-weight: bold
+  .tile-with-card
+    background: transparent url('/images/tile_with_card.png') top left no-repeat;

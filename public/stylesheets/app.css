@@ -602,6 +602,44 @@ body {
   background: #fff;
   font-family: sans-serif;
 }
+#outer-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+.game-page {
+  position: absolute;
+  -webkit-transform: translate3d(0px, 0px, 0px);
+  -moz-transform: translate3d(0px, 0px, 0px);
+  -o-transform: translate3d(0px, 0px, 0px);
+  -ms-transform: translate3d(0px, 0px, 0px);
+  transform: translate3d(0px, 0px, 0px);
+  -webkit-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
+}
+.game-page .game-board {
+  position: absolute;
+  -webkit-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
+}
+.game-page .game-tile {
+  position: absolute;
+  width: 240px;
+  height: 210px;
+  background: transparent url("/images/tile_bg.png") top left no-repeat;
+}
+.game-page .game-tile span {
+  font-weight: bold;
+}
+.game-page .tile-with-card {
+  background: transparent url("/images/tile_with_card.png") top left no-repeat;
+}
 .home-page {
   background-color: #fff;
 }
