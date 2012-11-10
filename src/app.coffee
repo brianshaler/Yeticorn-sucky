@@ -1,8 +1,12 @@
 express = require 'express'
+http = require 'http'
+socketio = require 'socket.io'
 path = require 'path'
 fs = require 'fs'
 
-module.exports = app = express()
+app = exports.app = express()
+server = exports.server = http.createServer(app)
+io = exports.io = socketio.listen server
 
 app.configure ->
   app.set 'port', process.env.PORT or 8000
@@ -15,3 +19,8 @@ app.configure ->
 
 app.configure 'development', ->
   app.use express.errorHandler()
+
+io.sockets.on 'connection', (socket) ->
+  socket.emit 'begin'
+  socket.on 'new game', (name) ->
+    socket.emit 'invite code', 'todo: generate codes'

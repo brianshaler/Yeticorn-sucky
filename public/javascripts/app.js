@@ -108,6 +108,7 @@ window.require.define({"application": function(exports, require, module) {
       this.initMediator();
       this.initControllers();
       this.initRouter(routes);
+      this.initSocket();
       return typeof Object.freeze === "function" ? Object.freeze(this) : void 0;
     };
 
@@ -125,6 +126,14 @@ window.require.define({"application": function(exports, require, module) {
     Application.prototype.initMediator = function() {
       mediator.player = null;
       return mediator.seal();
+    };
+
+    Application.prototype.initSocket = function() {
+      var socket;
+      socket = io.connect(window.location.href);
+      return socket.on('begin', function() {
+        return console.log('begin called');
+      });
     };
 
     return Application;

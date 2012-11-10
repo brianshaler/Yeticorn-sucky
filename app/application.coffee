@@ -30,6 +30,8 @@ module.exports = class Application extends Chaplin.Application
     # if necessary:
     # @initRouter routes, pushState: false, root: '/subdir/'
 
+    @initSocket()
+
     # Freeze the application instance to prevent further changes
     Object.freeze? this
 
@@ -60,3 +62,8 @@ module.exports = class Application extends Chaplin.Application
     # Add additional application-specific properties and methods
     # Seal the mediator
     mediator.seal()
+
+  initSocket: ->
+    socket = io.connect window.location.href
+    socket.on 'begin', ->
+      console.log 'begin called'

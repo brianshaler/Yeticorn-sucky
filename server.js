@@ -1,6 +1,5 @@
-var http = require('http')
-  , app = require('./lib/app');
+var app = require('./lib/app');
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
+app.server.listen(app.app.get('port'), function(){
+  console.log("Express server listening on port " + app.app.get('port'));
 });
