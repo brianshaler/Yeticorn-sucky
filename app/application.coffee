@@ -64,6 +64,7 @@ module.exports = class Application extends Chaplin.Application
     mediator.seal()
 
   initSocket: ->
-    socket = io.connect window.location.href
-    socket.on 'begin', ->
+    @socket = io.connect window.location.href
+    Chaplin.socket = @socket
+    @socket.on 'begin', ->
       console.log 'begin called'

@@ -129,9 +129,9 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.initSocket = function() {
-      var socket;
-      socket = io.connect(window.location.href);
-      return socket.on('begin', function() {
+      this.socket = io.connect(window.location.href);
+      Chaplin.socket = this.socket;
+      return this.socket.on('begin', function() {
         return console.log('begin called');
       });
     };
@@ -197,13 +197,17 @@ window.require.define({"controllers/header_controller": function(exports, requir
 }});
 
 window.require.define({"controllers/home_controller": function(exports, require, module) {
-  var Controller, HomeController, HomePageView,
+  var Chaplin, Controller, HomeController, HomePageView, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   Controller = require('controllers/base/controller');
 
   HomePageView = require('views/home_page_view');
+
+  _ = require('underscore');
+
+  Chaplin = require('chaplin');
 
   module.exports = HomeController = (function(_super) {
 
@@ -217,8 +221,25 @@ window.require.define({"controllers/home_controller": function(exports, require,
 
     HomeController.prototype.title = 'New Game';
 
+    HomeController.prototype.initialize = function() {
+      return this.enteredName = _.once(this.enteredName);
+    };
+
     HomeController.prototype.index = function() {
-      return this.view = new HomePageView();
+      this.view = new HomePageView();
+      return this.view.on('entered name', this.enteredName, this);
+    };
+
+    HomeController.prototype.enteredName = function() {
+      var _this = this;
+      Chaplin.socket.on('game code', function(id) {
+        return _this.invite(id);
+      });
+      return Chaplin.socket.emit('new game');
+    };
+
+    HomeController.prototype.invite = function(id) {
+      return window.location.hash = id;
     };
 
     return HomeController;
@@ -937,6 +958,7 @@ window.require.define({"views/home_page_view": function(exports, require, module
     };
 
     HomePageView.prototype.submitForm = function(e) {
+      this.trigger('entered name');
       return false;
     };
 

@@ -3,6 +3,7 @@ http = require 'http'
 socketio = require 'socket.io'
 path = require 'path'
 fs = require 'fs'
+idgen = require 'idgen'
 
 app = exports.app = express()
 server = exports.server = http.createServer(app)
@@ -23,4 +24,4 @@ app.configure 'development', ->
 io.sockets.on 'connection', (socket) ->
   socket.emit 'begin'
   socket.on 'new game', (name) ->
-    socket.emit 'invite code', 'todo: generate codes'
+    socket.emit 'game code', idgen()

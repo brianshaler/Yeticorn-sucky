@@ -20,7 +20,8 @@
     "handlebars-brunch": ">= 1.0 < 1.5",
     "uglify-js-brunch": ">= 1.0 < 1.5",
     "clean-css-brunch": ">= 1.0 < 1.5",
-    "socket.io": "~0.9.11"
+    "socket.io": "~0.9.11",
+    "idgen": "~1.1.2"
   },
   "devDependencies": {
     "chai": "1.2.0",

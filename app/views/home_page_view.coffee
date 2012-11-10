@@ -8,4 +8,5 @@ module.exports = class HomePageView extends PageView
     'submit form': 'submitForm'
 
   submitForm: (e) ->
+    @trigger 'entered name'
     false
