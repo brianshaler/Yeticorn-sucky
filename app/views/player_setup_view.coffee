@@ -1,8 +1,8 @@
-template = require 'views/templates/home'
+template = require 'views/templates/player_setup'
 
-module.exports = class HomePageView extends Backbone.View
+module.exports = class PlayerSetupView extends Backbone.View
   template: template
-  className: 'home-page'
+  className: 'player-setup setup'
   events:
     'submit form': 'submitForm'
 
@@ -14,5 +14,6 @@ module.exports = class HomePageView extends Backbone.View
     @$el.find('input[type=text]').val()
 
   render: ->
+    $('#page-container').html('')
     @$el.appendTo('#page-container')
     @$el.html(@template())

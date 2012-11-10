@@ -602,7 +602,36 @@ body {
   background: #fff;
   font-family: sans-serif;
 }
-#outer-container {
+header {
+  background-color: #999;
+  padding: 15px;
+}
+h1 {
+  font-size: 24pt;
+  text-align: center;
+  color: #fff;
+}
+.setup form {
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
+  text-align: center;
+}
+.setup form input {
+  text-transform: uppercase;
+  margin-top: 12px;
+  width: 50%;
+}
+.setup form input[type=text] {
+  text-align: center;
+}
+.setup p {
+  margin-top: 12px;
+  color: #999;
+  font-size: 16pt;
+}
+.outer-container {
   width: 100%;
   max-width: 100%;
   overflow: hidden;
@@ -639,38 +668,6 @@ body {
 }
 .game-page .tile-with-card {
   background: transparent url("/images/tile_with_card.png") top left no-repeat;
-}
-.home-page {
-  background-color: #fff;
-}
-.home-page form {
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 20px;
-  text-align: center;
-}
-.home-page form input {
-  text-transform: uppercase;
-  margin-top: 12px;
-  width: 50%;
-}
-.home-page form input[type=text] {
-  text-align: center;
-}
-.home-page p {
-  margin-top: 12px;
-  color: #999;
-  font-size: 16pt;
-}
-.home-page header {
-  background-color: #999;
-  padding: 15px;
-}
-.home-page h1 {
-  font-size: 24pt;
-  text-align: center;
-  color: #fff;
 }
 /* ==========================================================================
    Helper classes

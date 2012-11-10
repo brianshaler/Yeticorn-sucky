@@ -21,7 +21,9 @@
     "uglify-js-brunch": ">= 1.0 < 1.5",
     "clean-css-brunch": ">= 1.0 < 1.5",
     "socket.io": "~0.9.11",
-    "idgen": "~1.1.2"
+    "idgen": "~1.1.2",
+    "mongoose": "~3.3.1",
+    "backbone": "~0.9.2"
   },
   "devDependencies": {},
   "engines": {

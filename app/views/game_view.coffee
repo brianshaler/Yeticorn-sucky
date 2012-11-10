@@ -36,6 +36,7 @@ module.exports = class GameView extends Backbone.View
       (tile.positionY + (if tile.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
 
   render: ->
+    $('#page-container').html ''
     @$el.appendTo('#page-container')
     @$el.html(@template(@model))
     
@@ -59,10 +60,15 @@ module.exports = class GameView extends Backbone.View
             'stroke-width': 6
     else
       console.log 'Something really bad happened..'
+    
+    event = document.createEvent 'Event'
+    event.initEvent 'viewportchanged', true, true
+    event.width = window.viewportWidth
+    event.height = window.viewportHeight
+    window.dispatchEvent event
 
   resizeWindow: (e) =>
     event = e.originalEvent
-    console.log 'resizeWindow('+event.width+', '+event.height+')'
     mapWidth = Math.ceil (@cols+.5) * @tileWidth*.75
     mapHeight = Math.ceil (@rows+.5) * @tileHeight
     scaleX = event.width / mapWidth
@@ -70,9 +76,7 @@ module.exports = class GameView extends Backbone.View
     scale = if scaleX < scaleY then scaleX else scaleY
     offsetX = Math.ceil (event.width - mapWidth*scale) / 2
     offsetY = Math.ceil (event.height - mapHeight*scale) / 2
-    console.log 'board: ' + @cols + 'x' + @rows
     transform = "scale(" + scale + ")"
-    console.log transform
     $('.game-board').css(
       '-webkit-transform': transform
       '-moz-transform': transform
@@ -87,4 +91,3 @@ module.exports = class GameView extends Backbone.View
 
   resetPlayers: () ->
     
-

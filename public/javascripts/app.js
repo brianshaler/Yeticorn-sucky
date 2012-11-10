@@ -75,13 +75,17 @@
 })();
 
 window.require.define({"application": function(exports, require, module) {
-  var Application, Game, GameView, HomePageView,
+  var Application, Game, GameSetupView, GameView, IntroView, PlayerSetupView,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  HomePageView = require('views/home_page_view');
-
   Game = require('models/game');
+
+  IntroView = require('views/intro_view');
+
+  PlayerSetupView = require('views/player_setup_view');
+
+  GameSetupView = require('views/game_setup_view');
 
   GameView = require('views/game_view');
 
@@ -94,22 +98,72 @@ window.require.define({"application": function(exports, require, module) {
     }
 
     Application.prototype.initialize = function() {
-      return this.enteredName = _.once(this.enteredName);
+      this.enteredName = _.once(this.enteredName);
+      this.clickedPlay = _.once(this.clickedPlay);
+      return $(window).on("viewportchanged", function(e) {
+        var event;
+        event = e.originalEvent;
+        window.viewportWidth = event.width;
+        return window.viewportHeight = event.height;
+      });
     };
 
     Application.prototype.start = function() {
       this.viewport = new Viewporter('outer-container');
-      this.showGame();
       return this.connectSocket();
     };
 
-    Application.prototype.goHome = function() {
+    Application.prototype.connectSocket = function() {
       var _this = this;
-      this.homePageView = new HomePageView();
-      this.homePageView.render();
-      return this.homePageView.on('entered name', function() {
+      this.socket = io.connect(window.location.href);
+      this.socket.on('intro.show', function() {
+        console.log('show');
+        return _this.intro();
+      });
+      return this.socket.on('gameSetup.show', function(gameId) {
+        _this.gameId = gameId;
+        return _this.gameSetup();
+      });
+    };
+
+    Application.prototype.intro = function() {
+      var _this = this;
+      this.introView = new IntroView;
+      this.introView.render();
+      return this.introView.on('clickedPlay', function() {
+        return _this.clickedPlay();
+      });
+    };
+
+    Application.prototype.clickedPlay = function() {
+      return this.playerSetup();
+    };
+
+    Application.prototype.playerSetup = function() {
+      var _this = this;
+      this.playerSetupView = new PlayerSetupView();
+      this.playerSetupView.render();
+      return this.playerSetupView.on('entered name', function() {
         return _this.enteredName();
       });
+    };
+
+    Application.prototype.enteredName = function() {
+      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName());
+    };
+
+    Application.prototype.gameSetup = function() {
+      var _this = this;
+      window.location.hash = this.gameId;
+      this.gameSetupView = new GameSetupView();
+      this.gameSetupView.render();
+      return this.gameSetupView.on('clickedStart', function() {
+        return _this.clickedStart();
+      });
+    };
+
+    Application.prototype.clickedStart = function() {
+      return this.showGame();
     };
 
     Application.prototype.showGame = function() {
@@ -118,20 +172,6 @@ window.require.define({"application": function(exports, require, module) {
         model: this.model
       });
       return this.gameView.render();
-    };
-
-    Application.prototype.connectSocket = function() {
-      this.socket = io.connect(window.location.href);
-      this.socket.on('begin', function() {
-        return console.log('begin called');
-      });
-      return this.socket.on('game code', function(id) {
-        return window.location.hash = id;
-      });
-    };
-
-    Application.prototype.enteredName = function() {
-      return this.socket.emit('new game', this.homePageView.getName());
     };
 
     return Application;
@@ -234,6 +274,47 @@ window.require.define({"models/game": function(exports, require, module) {
   
 }});
 
+window.require.define({"views/game_setup_view": function(exports, require, module) {
+  var GameSetupView, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/game_setup');
+
+  module.exports = GameSetupView = (function(_super) {
+
+    __extends(GameSetupView, _super);
+
+    function GameSetupView() {
+      return GameSetupView.__super__.constructor.apply(this, arguments);
+    }
+
+    GameSetupView.prototype.template = template;
+
+    GameSetupView.prototype.className = 'game-setup setup';
+
+    GameSetupView.prototype.events = {
+      'click .start': 'onClickedStart'
+    };
+
+    GameSetupView.prototype.onClickedStart = function(e) {
+      this.trigger('clickedStart');
+      e.preventDefault();
+      return false;
+    };
+
+    GameSetupView.prototype.render = function() {
+      $('#page-container').html('');
+      this.$el.appendTo('#page-container');
+      return this.$el.html(this.template());
+    };
+
+    return GameSetupView;
+
+  })(Backbone.View);
+  
+}});
+
 window.require.define({"views/game_view": function(exports, require, module) {
   var GameView, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -297,13 +378,13 @@ window.require.define({"views/game_view": function(exports, require, module) {
     };
 
     GameView.prototype.render = function() {
-      var tile, x, x0, x1, x2, x3, y, y0, y1, y2, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
+      var event, tile, x, x0, x1, x2, x3, y, y0, y1, y2, _i, _len, _ref, _ref1, _ref2, _ref3;
+      $('#page-container').html('');
       this.$el.appendTo('#page-container');
       this.$el.html(this.template(this.model));
       this.hitareas = new Raphael('map-overlay');
       if (((_ref = this.model) != null ? (_ref1 = _ref.attributes) != null ? (_ref2 = _ref1.tiles) != null ? _ref2.length : void 0 : void 0 : void 0) > 0) {
         _ref3 = this.model.attributes.tiles;
-        _results = [];
         for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
           tile = _ref3[_i];
           x = tile.positionX * (this.tileWidth * .75);
@@ -315,22 +396,25 @@ window.require.define({"views/game_view": function(exports, require, module) {
           y0 = y;
           y1 = y + this.tileHeight * .5;
           y2 = y + this.tileHeight;
-          _results.push(this.hitareas.path("M" + x1 + "," + y0 + "L" + x2 + "," + y0 + "L" + x3 + "," + y1 + "L" + x2 + "," + y2 + "L" + x1 + "," + y2 + "L" + x0 + "," + y1 + "L" + x1 + "," + y0).attr({
+          this.hitareas.path("M" + x1 + "," + y0 + "L" + x2 + "," + y0 + "L" + x3 + "," + y1 + "L" + x2 + "," + y2 + "L" + x1 + "," + y2 + "L" + x0 + "," + y1 + "L" + x1 + "," + y0).attr({
             fill: 'rgba(0,0,0,0)',
             stroke: '#fff',
             'stroke-width': 6
-          }));
+          });
         }
-        return _results;
       } else {
-        return console.log('Something really bad happened..');
+        console.log('Something really bad happened..');
       }
+      event = document.createEvent('Event');
+      event.initEvent('viewportchanged', true, true);
+      event.width = window.viewportWidth;
+      event.height = window.viewportHeight;
+      return window.dispatchEvent(event);
     };
 
     GameView.prototype.resizeWindow = function(e) {
       var event, mapHeight, mapWidth, offsetX, offsetY, scale, scaleX, scaleY, transform;
       event = e.originalEvent;
-      console.log('resizeWindow(' + event.width + ', ' + event.height + ')');
       mapWidth = Math.ceil((this.cols + .5) * this.tileWidth * .75);
       mapHeight = Math.ceil((this.rows + .5) * this.tileHeight);
       scaleX = event.width / mapWidth;
@@ -338,9 +422,7 @@ window.require.define({"views/game_view": function(exports, require, module) {
       scale = scaleX < scaleY ? scaleX : scaleY;
       offsetX = Math.ceil((event.width - mapWidth * scale) / 2);
       offsetY = Math.ceil((event.height - mapHeight * scale) / 2);
-      console.log('board: ' + this.cols + 'x' + this.rows);
       transform = "scale(" + scale + ")";
-      console.log(transform);
       $('.game-board').css({
         '-webkit-transform': transform,
         '-moz-transform': transform,
@@ -365,44 +447,86 @@ window.require.define({"views/game_view": function(exports, require, module) {
   
 }});
 
-window.require.define({"views/home_page_view": function(exports, require, module) {
-  var HomePageView, template,
+window.require.define({"views/intro_view": function(exports, require, module) {
+  var IntroView, template,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  template = require('views/templates/home');
+  template = require('views/templates/intro');
 
-  module.exports = HomePageView = (function(_super) {
+  module.exports = IntroView = (function(_super) {
 
-    __extends(HomePageView, _super);
+    __extends(IntroView, _super);
 
-    function HomePageView() {
-      return HomePageView.__super__.constructor.apply(this, arguments);
+    function IntroView() {
+      return IntroView.__super__.constructor.apply(this, arguments);
     }
 
-    HomePageView.prototype.template = template;
+    IntroView.prototype.template = template;
 
-    HomePageView.prototype.className = 'home-page';
+    IntroView.prototype.className = 'intro setup';
 
-    HomePageView.prototype.events = {
-      'submit form': 'submitForm'
+    IntroView.prototype.events = {
+      'click .play': 'onClickedPlay'
     };
 
-    HomePageView.prototype.submitForm = function(e) {
-      this.trigger('entered name');
+    IntroView.prototype.onClickedPlay = function(e) {
+      this.trigger('clickedPlay');
+      e.preventDefault();
       return false;
     };
 
-    HomePageView.prototype.getName = function() {
-      return this.$el.find('input[type=text]').val();
-    };
-
-    HomePageView.prototype.render = function() {
+    IntroView.prototype.render = function() {
+      $('#page-container').html('');
       this.$el.appendTo('#page-container');
       return this.$el.html(this.template());
     };
 
-    return HomePageView;
+    return IntroView;
+
+  })(Backbone.View);
+  
+}});
+
+window.require.define({"views/player_setup_view": function(exports, require, module) {
+  var PlayerSetupView, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/player_setup');
+
+  module.exports = PlayerSetupView = (function(_super) {
+
+    __extends(PlayerSetupView, _super);
+
+    function PlayerSetupView() {
+      return PlayerSetupView.__super__.constructor.apply(this, arguments);
+    }
+
+    PlayerSetupView.prototype.template = template;
+
+    PlayerSetupView.prototype.className = 'player-setup setup';
+
+    PlayerSetupView.prototype.events = {
+      'submit form': 'submitForm'
+    };
+
+    PlayerSetupView.prototype.submitForm = function(e) {
+      this.trigger('entered name');
+      return false;
+    };
+
+    PlayerSetupView.prototype.getName = function() {
+      return this.$el.find('input[type=text]').val();
+    };
+
+    PlayerSetupView.prototype.render = function() {
+      $('#page-container').html('');
+      this.$el.appendTo('#page-container');
+      return this.$el.html(this.template());
+    };
+
+    return PlayerSetupView;
 
   })(Backbone.View);
   
@@ -481,15 +605,28 @@ window.require.define({"views/templates/game": function(exports, require, module
     stack1 = stack2.call(depth0, stack1, tmp1);
     if(stack1 || stack1 === 0) { buffer += stack1; }
     buffer += "\n</div>\n<div class=\"game-board map-overlay\" id=\"map-overlay\" style=\"width: 1000px; height: 1000px;\">\n</div>\n";
-    foundHelper = helpers.multiplier;
-    stack1 = foundHelper || depth0.multiplier;
-    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
-    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "multiplier", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "\n";
     return buffer;});
 }});
 
-window.require.define({"views/templates/home": function(exports, require, module) {
+window.require.define({"views/templates/game_setup": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var foundHelper, self=this;
+
+
+    return "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";});
+}});
+
+window.require.define({"views/templates/intro": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var foundHelper, self=this;
+
+
+    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n</form>";});
+}});
+
+window.require.define({"views/templates/player_setup": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
     var foundHelper, self=this;

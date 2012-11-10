@@ -51,6 +51,7 @@ database:
   name: yeticorn
   username: corecorn
   password: "C0C0NZT#&Lime)<33"
+  url: "mongodb://corecorn:C0C0NZT#&Lime)<33@ds029817.mongolab.com:29817/yeticorn"
 ~~~
 
 ## Tips
