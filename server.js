@@ -1,5 +1,6 @@
-var app = require('./lib/app');
+var ServerApp = require('./lib/app')
+  , serverApp = new ServerApp();
 
-app.server.listen(app.app.get('port'), function(){
-  console.log("Express server listening on port " + app.app.get('port'));
+serverApp.server.listen(serverApp.app.get('port'), function(){
+  console.log("Express server listening on port " + serverApp.app.get('port'));
 });

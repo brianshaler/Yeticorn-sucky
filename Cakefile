@@ -3,9 +3,7 @@ fs = require 'fs'
 {print} = require 'sys'
 {spawn} = require 'child_process'
 
-build = (watch, callback) ->
-  args = ['-c', '-o', 'lib', 'src']
-  args.unshift '-w' if watch
+runCoffee = (args, callback) ->
   coffee = spawn 'coffee', args
   coffee.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
@@ -15,7 +13,9 @@ build = (watch, callback) ->
     callback?() if code is 0
 
 task 'build', 'Build lib/ from src/', ->
-  build(false)
+  runCoffee ['-c', '-o', 'lib', 'src']
+  runCoffee ['-c', '-o', 'lib/db', 'src/db']
 
 task 'watch', 'Build lib/ from src/ and watch', ->
-  build(true)
+  runCoffee ['-w', '-c', '-o', 'lib', 'src']
+  runCoffee ['-w', '-c', '-o', 'lib/db', 'src/db']
