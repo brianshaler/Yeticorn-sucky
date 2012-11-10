@@ -40,6 +40,8 @@ jitsu deploy
 
 ### MongoLab
 
+Login here: https://mongolab.com/login/
+
 ~~~yaml
 account:
   name: yeticorn
