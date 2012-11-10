@@ -1,7 +1,6 @@
 template = require 'views/templates/home'
-PageView = require 'views/base/page_view'
 
-module.exports = class HomePageView extends PageView
+module.exports = class HomePageView extends Backbone.View
   template: template
   className: 'home-page'
   events:
@@ -10,3 +9,10 @@ module.exports = class HomePageView extends PageView
   submitForm: (e) ->
     @trigger 'entered name'
     false
+
+  getName: ->
+    @$el.find('input[type=text]').val()
+
+  render: ->
+    @$el.appendTo('#page-container')
+    @$el.html(@template())

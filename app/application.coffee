@@ -1,70 +1,27 @@
-Chaplin = require 'chaplin'
-mediator = require 'mediator'
-routes = require 'routes'
-SessionController = require 'controllers/session_controller'
-HeaderController = require 'controllers/header_controller'
-Layout = require 'views/layout'
+HomePageView = require 'views/home_page_view'
 
 # The application object
-module.exports = class Application extends Chaplin.Application
-  # Set your application name here so the document title is set to
-  # “Controller title – Site title” (see Layout#adjustTitle)
-  title: 'Yeticorn'
+module.exports = class Application extends Backbone.Model
 
   initialize: ->
-    super
+    @enteredName = _.once @enteredName
 
-    # Initialize core components
-    @initDispatcher()
-    @initLayout()
-    @initMediator()
+  start: ->
+    @goHome()
+    @connectSocket()
 
-    # Application-specific scaffold
-    @initControllers()
+  goHome: ->
+    @homePageView = new HomePageView()
+    @homePageView.render()
+    @homePageView.on 'entered name', =>
+      @enteredName()
 
-    # Register all routes and start routing
-    @initRouter routes
-    # You might pass Router/History options as the second parameter.
-    # Chaplin enables pushState per default and Backbone uses / as
-    # the root per default. You might change that in the options
-    # if necessary:
-    # @initRouter routes, pushState: false, root: '/subdir/'
-
-    @initSocket()
-
-    # Freeze the application instance to prevent further changes
-    Object.freeze? this
-
-  # Override standard layout initializer
-  # ------------------------------------
-  initLayout: ->
-    # Use an application-specific Layout class. Currently this adds
-    # no features to the standard Chaplin Layout, it’s an empty placeholder.
-    @layout = new Layout {@title}
-
-  # Instantiate common controllers
-  # ------------------------------
-  initControllers: ->
-    # These controllers are active during the whole application runtime.
-    # You don’t need to instantiate all controllers here, only special
-    # controllers which do not to respond to routes. They may govern models
-    # and views which are needed the whole time, for example header, footer
-    # or navigation views.
-    # e.g. new NavigationController()
-    new SessionController()
-    new HeaderController()
-
-  # Create additional mediator properties
-  # -------------------------------------
-  initMediator: ->
-    # Create a user property
-    mediator.player = null
-    # Add additional application-specific properties and methods
-    # Seal the mediator
-    mediator.seal()
-
-  initSocket: ->
+  connectSocket: ->
     @socket = io.connect window.location.href
-    Chaplin.socket = @socket
     @socket.on 'begin', ->
       console.log 'begin called'
+    @socket.on 'game code', (id) ->
+      window.location.hash = id
+
+  enteredName: ->
+    @socket.emit 'new game', @homePageView.getName()

@@ -23,11 +23,7 @@
     "socket.io": "~0.9.11",
     "idgen": "~1.1.2"
   },
-  "devDependencies": {
-    "chai": "1.2.0",
-    "sinon": "1.4.2",
-    "sinon-chai": "2.1.2"
-  },
+  "devDependencies": {},
   "engines": {
     "node": "0.8.x"
   },
