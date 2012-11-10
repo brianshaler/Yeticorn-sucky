@@ -99,7 +99,7 @@ window.require.define({"application": function(exports, require, module) {
       return Application.__super__.constructor.apply(this, arguments);
     }
 
-    Application.prototype.title = 'Brunch example application';
+    Application.prototype.title = 'Yeticorn';
 
     Application.prototype.initialize = function() {
       Application.__super__.initialize.apply(this, arguments);
@@ -123,7 +123,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.initMediator = function() {
-      mediator.user = null;
+      mediator.player = null;
       return mediator.seal();
     };
 
@@ -205,6 +205,8 @@ window.require.define({"controllers/home_controller": function(exports, require,
     }
 
     HomeController.prototype.historyURL = 'home';
+
+    HomeController.prototype.title = 'New Game';
 
     HomeController.prototype.index = function() {
       return this.view = new HomePageView();
@@ -921,6 +923,14 @@ window.require.define({"views/home_page_view": function(exports, require, module
 
     HomePageView.prototype.className = 'home-page';
 
+    HomePageView.prototype.events = {
+      'submit form': 'submitForm'
+    };
+
+    HomePageView.prototype.submitForm = function(e) {
+      return false;
+    };
+
     return HomePageView;
 
   })(PageView);
@@ -1063,7 +1073,7 @@ window.require.define({"views/templates/home": function(exports, require, module
     var foundHelper, self=this;
 
 
-    return "<a href=\"http://brunch.io/\">\n  <img src=\"http://brunch.io/images/brunch.png\" alt=\"Brunch\" />\n</a>\n";});
+    return "<h1>Yeticorn</h1>\n\n<form method=\"post\" action=\"/\">\n\n  <div>\n    <p>Enter your name:</p>\n  </div>\n\n  <div>\n    <input type=\"text\" />\n  </div>\n\n  <div>\n    <input type=\"submit\" value=\"Invite Players &raquo;\" />\n  </div>\n\n</form>";});
 }});
 
 window.require.define({"views/templates/login": function(exports, require, module) {

@@ -9,7 +9,7 @@ Layout = require 'views/layout'
 module.exports = class Application extends Chaplin.Application
   # Set your application name here so the document title is set to
   # “Controller title – Site title” (see Layout#adjustTitle)
-  title: 'Brunch example application'
+  title: 'Yeticorn'
 
   initialize: ->
     super
@@ -56,7 +56,7 @@ module.exports = class Application extends Chaplin.Application
   # -------------------------------------
   initMediator: ->
     # Create a user property
-    mediator.user = null
+    mediator.player = null
     # Add additional application-specific properties and methods
     # Seal the mediator
     mediator.seal()
