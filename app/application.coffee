@@ -1,4 +1,4 @@
-HomePageView = require 'views/home_page_view'
+PlayerSetupView = require 'views/player_setup_view'
 
 # The application object
 module.exports = class Application extends Backbone.Model
@@ -7,21 +7,21 @@ module.exports = class Application extends Backbone.Model
     @enteredName = _.once @enteredName
 
   start: ->
-    @goHome()
     @connectSocket()
 
-  goHome: ->
-    @homePageView = new HomePageView()
-    @homePageView.render()
-    @homePageView.on 'entered name', =>
+  playerSetup: ->
+    @playerSetupView = new PlayerSetupView()
+    @playerSetupView.render()
+    @playerSetupView.on 'entered name', =>
       @enteredName()
 
   connectSocket: ->
     @socket = io.connect window.location.href
-    @socket.on 'begin', ->
-      console.log 'begin called'
-    @socket.on 'game code', (id) ->
+    @socket.on 'intro.show', =>
+      console.log 'show'
+      @playerSetup()
+    @socket.on 'gameSetup.show', (id) ->
       window.location.hash = id
 
   enteredName: ->
-    @socket.emit 'new game', @homePageView.getName()
+    @socket.emit 'playerSetup.submit', @playerSetupView.getName()

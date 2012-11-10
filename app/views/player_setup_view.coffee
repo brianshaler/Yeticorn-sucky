@@ -1,6 +1,6 @@
-template = require 'views/templates/home'
+template = require 'views/templates/player_setup'
 
-module.exports = class HomePageView extends Backbone.View
+module.exports = class PlayerSetupView extends Backbone.View
   template: template
   className: 'home-page'
   events:

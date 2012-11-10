@@ -75,11 +75,11 @@
 })();
 
 window.require.define({"application": function(exports, require, module) {
-  var Application, HomePageView,
+  var Application, PlayerSetupView,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  HomePageView = require('views/home_page_view');
+  PlayerSetupView = require('views/player_setup_view');
 
   module.exports = Application = (function(_super) {
 
@@ -94,31 +94,32 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.start = function() {
-      this.goHome();
       return this.connectSocket();
     };
 
-    Application.prototype.goHome = function() {
+    Application.prototype.playerSetup = function() {
       var _this = this;
-      this.homePageView = new HomePageView();
-      this.homePageView.render();
-      return this.homePageView.on('entered name', function() {
+      this.playerSetupView = new PlayerSetupView();
+      this.playerSetupView.render();
+      return this.playerSetupView.on('entered name', function() {
         return _this.enteredName();
       });
     };
 
     Application.prototype.connectSocket = function() {
+      var _this = this;
       this.socket = io.connect(window.location.href);
-      this.socket.on('begin', function() {
-        return console.log('begin called');
+      this.socket.on('intro.show', function() {
+        console.log('show');
+        return _this.playerSetup();
       });
-      return this.socket.on('game code', function(id) {
+      return this.socket.on('gameSetup.show', function(id) {
         return window.location.hash = id;
       });
     };
 
     Application.prototype.enteredName = function() {
-      return this.socket.emit('new game', this.homePageView.getName());
+      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName());
     };
 
     return Application;
@@ -140,50 +141,50 @@ window.require.define({"initialize": function(exports, require, module) {
   
 }});
 
-window.require.define({"views/home_page_view": function(exports, require, module) {
-  var HomePageView, template,
+window.require.define({"views/player_setup_view": function(exports, require, module) {
+  var PlayerSetupView, template,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  template = require('views/templates/home');
+  template = require('views/templates/player_setup');
 
-  module.exports = HomePageView = (function(_super) {
+  module.exports = PlayerSetupView = (function(_super) {
 
-    __extends(HomePageView, _super);
+    __extends(PlayerSetupView, _super);
 
-    function HomePageView() {
-      return HomePageView.__super__.constructor.apply(this, arguments);
+    function PlayerSetupView() {
+      return PlayerSetupView.__super__.constructor.apply(this, arguments);
     }
 
-    HomePageView.prototype.template = template;
+    PlayerSetupView.prototype.template = template;
 
-    HomePageView.prototype.className = 'home-page';
+    PlayerSetupView.prototype.className = 'home-page';
 
-    HomePageView.prototype.events = {
+    PlayerSetupView.prototype.events = {
       'submit form': 'submitForm'
     };
 
-    HomePageView.prototype.submitForm = function(e) {
+    PlayerSetupView.prototype.submitForm = function(e) {
       this.trigger('entered name');
       return false;
     };
 
-    HomePageView.prototype.getName = function() {
+    PlayerSetupView.prototype.getName = function() {
       return this.$el.find('input[type=text]').val();
     };
 
-    HomePageView.prototype.render = function() {
+    PlayerSetupView.prototype.render = function() {
       this.$el.appendTo('#page-container');
       return this.$el.html(this.template());
     };
 
-    return HomePageView;
+    return PlayerSetupView;
 
   })(Backbone.View);
   
 }});
 
-window.require.define({"views/templates/home": function(exports, require, module) {
+window.require.define({"views/templates/player_setup": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
     var foundHelper, self=this;

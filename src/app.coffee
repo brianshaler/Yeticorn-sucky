@@ -22,6 +22,8 @@ app.configure 'development', ->
   app.use express.errorHandler()
 
 io.sockets.on 'connection', (socket) ->
-  socket.emit 'begin'
-  socket.on 'new game', (name) ->
-    socket.emit 'game code', idgen()
+  socket.emit 'intro.show'
+  socket.on 'playerSetup.submit', (name) ->
+    socket.emit 'gameSetup.show', idgen()
+  socket.on 'gameSetup.submit', ->
+    socket.emit 'game.show'
