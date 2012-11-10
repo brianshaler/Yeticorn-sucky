@@ -75,11 +75,17 @@
 })();
 
 window.require.define({"application": function(exports, require, module) {
-  var Application, PlayerSetupView,
+  var Application, GameSetupView, GameView, IntroView, PlayerSetupView,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
+  IntroView = require('views/intro_view');
+
   PlayerSetupView = require('views/player_setup_view');
+
+  GameSetupView = require('views/game_setup_view');
+
+  GameView = require('views/game_view');
 
   module.exports = Application = (function(_super) {
 
@@ -90,11 +96,37 @@ window.require.define({"application": function(exports, require, module) {
     }
 
     Application.prototype.initialize = function() {
-      return this.enteredName = _.once(this.enteredName);
+      this.enteredName = _.once(this.enteredName);
+      return this.clickedPlay = _.once(this.clickedPlay);
     };
 
     Application.prototype.start = function() {
       return this.connectSocket();
+    };
+
+    Application.prototype.connectSocket = function() {
+      var _this = this;
+      this.socket = io.connect(window.location.href);
+      this.socket.on('intro.show', function() {
+        console.log('show');
+        return _this.intro();
+      });
+      return this.socket.on('gameSetup.show', function(id) {
+        return window.location.hash = id;
+      });
+    };
+
+    Application.prototype.intro = function() {
+      var _this = this;
+      this.introView = new IntroView;
+      this.introView.render();
+      return this.introView.on('clickedPlay', function() {
+        return _this.clickedPlay();
+      });
+    };
+
+    Application.prototype.clickedPlay = function() {
+      return this.playerSetup();
     };
 
     Application.prototype.playerSetup = function() {
@@ -103,18 +135,6 @@ window.require.define({"application": function(exports, require, module) {
       this.playerSetupView.render();
       return this.playerSetupView.on('entered name', function() {
         return _this.enteredName();
-      });
-    };
-
-    Application.prototype.connectSocket = function() {
-      var _this = this;
-      this.socket = io.connect(window.location.href);
-      this.socket.on('intro.show', function() {
-        console.log('show');
-        return _this.playerSetup();
-      });
-      return this.socket.on('gameSetup.show', function(id) {
-        return window.location.hash = id;
       });
     };
 
@@ -141,6 +161,109 @@ window.require.define({"initialize": function(exports, require, module) {
   
 }});
 
+window.require.define({"views/game_setup_view": function(exports, require, module) {
+  var GameSetupView, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/game_setup');
+
+  module.exports = GameSetupView = (function(_super) {
+
+    __extends(GameSetupView, _super);
+
+    function GameSetupView() {
+      return GameSetupView.__super__.constructor.apply(this, arguments);
+    }
+
+    GameSetupView.prototype.template = template;
+
+    GameSetupView.prototype.className = 'game-setup';
+
+    GameSetupView.prototype.render = function() {
+      $('#page-container').html('');
+      this.$el.appendTo('#page-container');
+      return this.$el.html(this.template());
+    };
+
+    return GameSetupView;
+
+  })(Backbone.View);
+  
+}});
+
+window.require.define({"views/game_view": function(exports, require, module) {
+  var GameView, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/game');
+
+  module.exports = GameView = (function(_super) {
+
+    __extends(GameView, _super);
+
+    function GameView() {
+      return GameView.__super__.constructor.apply(this, arguments);
+    }
+
+    GameView.prototype.template = template;
+
+    GameView.prototype.className = 'game';
+
+    GameView.prototype.render = function() {
+      $('#page-container').html('');
+      this.$el.appendTo('#page-container');
+      return this.$el.html(this.template());
+    };
+
+    return GameView;
+
+  })(Backbone.View);
+  
+}});
+
+window.require.define({"views/intro_view": function(exports, require, module) {
+  var IntroView, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/intro');
+
+  module.exports = IntroView = (function(_super) {
+
+    __extends(IntroView, _super);
+
+    function IntroView() {
+      return IntroView.__super__.constructor.apply(this, arguments);
+    }
+
+    IntroView.prototype.template = template;
+
+    IntroView.prototype.className = 'intro';
+
+    IntroView.prototype.events = {
+      'click .play': 'onClickedPlay'
+    };
+
+    IntroView.prototype.onClickedPlay = function(e) {
+      this.trigger('clickedPlay');
+      e.preventDefault();
+      return false;
+    };
+
+    IntroView.prototype.render = function() {
+      $('#page-container').html('');
+      this.$el.appendTo('#page-container');
+      return this.$el.html(this.template());
+    };
+
+    return IntroView;
+
+  })(Backbone.View);
+  
+}});
+
 window.require.define({"views/player_setup_view": function(exports, require, module) {
   var PlayerSetupView, template,
     __hasProp = {}.hasOwnProperty,
@@ -158,7 +281,7 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
 
     PlayerSetupView.prototype.template = template;
 
-    PlayerSetupView.prototype.className = 'home-page';
+    PlayerSetupView.prototype.className = 'player-setup';
 
     PlayerSetupView.prototype.events = {
       'submit form': 'submitForm'
@@ -174,6 +297,7 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
     };
 
     PlayerSetupView.prototype.render = function() {
+      $('#page-container').html('');
       this.$el.appendTo('#page-container');
       return this.$el.html(this.template());
     };
@@ -182,6 +306,33 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
 
   })(Backbone.View);
   
+}});
+
+window.require.define({"views/templates/game": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var buffer = "", foundHelper, self=this;
+
+
+    return buffer;});
+}});
+
+window.require.define({"views/templates/game_setup": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var foundHelper, self=this;
+
+
+    return "<header>\n  <h1>Yeticorn</h1>\n</header>\n\n<form method=\"post\" action=\"/\">\n\n  <div class=\"select-player\">\n    <a href=\"#\">Carl</a>\n    <a href=\"#\">???</a>\n  </div>\n\n  <div>\n    <input type=\"text\" placeholder=\"Player Name\" />\n  </div>\n\n  <p>\n    Meet Carl.\n  </p>\n\n  <p>\n    Carl has a bad habit of leaving \"The Gaga Pit of Doom\"\n    and seeking out lost wanderers for dinner.\n  </p>\n\n  <div>\n    <input type=\"submit\" value=\"Next &raquo;\" />\n  </div>\n\n</form>";});
+}});
+
+window.require.define({"views/templates/intro": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var foundHelper, self=this;
+
+
+    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<a href=\"#\" class=\"play\">Play!</a>";});
 }});
 
 window.require.define({"views/templates/player_setup": function(exports, require, module) {
