@@ -1,6 +1,6 @@
 {
   "name": "nko3-yeticorn",
-  "version": "0.0.0-3",
+  "version": "0.0.0-4",
   "description": "Yeticorn",
   "main": "server.js",
   "scripts": {
@@ -10,12 +10,11 @@
     "type": "git",
     "url": "git@github.com:nko3/yeticorn.git"
   },
-  "dependencies": {},
-  "engines": {
-    "node": "0.8.x"
-  },
   "dependencies": {
     "express": "3.0.2"
+  },
+  "engines": {
+    "node": "0.8.x"
   },
   "subdomain": "yeticorn.nko3"
 }
