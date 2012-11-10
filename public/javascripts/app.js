@@ -111,7 +111,8 @@ window.require.define({"application": function(exports, require, module) {
         console.log('show');
         return _this.intro();
       });
-      return this.socket.on('gameSetup.show', function(id) {
+      return this.socket.on('gameSetup.show', function(gameId) {
+        _this.gameId = gameId;
         return _this.gameSetup();
       });
     };
@@ -143,7 +144,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.gameSetup = function() {
-      window.location.hash = id;
+      window.location.hash = this.gameId;
       this.gameSetupView = new GameSetupView();
       return this.gameSetupView.render();
     };
@@ -184,7 +185,7 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
 
     GameSetupView.prototype.template = template;
 
-    GameSetupView.prototype.className = 'game-setup';
+    GameSetupView.prototype.className = 'game-setup setup';
 
     GameSetupView.prototype.render = function() {
       $('#page-container').html('');
@@ -329,7 +330,7 @@ window.require.define({"views/templates/game_setup": function(exports, require, 
     var foundHelper, self=this;
 
 
-    return "<header>\n  <h1>Yeticorn</h1>\n</header>\n\n<form method=\"post\" action=\"/\">\n\n  <div class=\"select-player\">\n    <a href=\"#\">Carl</a>\n    <a href=\"#\">???</a>\n  </div>\n\n  <div>\n    <input type=\"text\" placeholder=\"Player Name\" />\n  </div>\n\n  <p>\n    Meet Carl.\n  </p>\n\n  <p>\n    Carl has a bad habit of leaving \"The Gaga Pit of Doom\"\n    and seeking out lost wanderers for dinner.\n  </p>\n\n  <div>\n    <input type=\"submit\" value=\"Next &raquo;\" />\n  </div>\n\n</form>";});
+    return "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";});
 }});
 
 window.require.define({"views/templates/intro": function(exports, require, module) {
