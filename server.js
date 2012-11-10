@@ -1,7 +1,6 @@
-var http = require('http');
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
-}).listen(8000);
+var http = require('http')
+  , app = require('./lib/app');
 
-console.log('Server running at http://0.0.0.0:8000/');
+http.createServer(app).listen(app.get('port'), function(){
+  console.log("Express server listening on port " + app.get('port'));
+});
