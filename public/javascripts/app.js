@@ -183,54 +183,12 @@ window.require.define({"views/home_page_view": function(exports, require, module
   
 }});
 
-window.require.define({"views/templates/header": function(exports, require, module) {
-  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
-    helpers = helpers || Handlebars.helpers;
-    var stack1, stack2, foundHelper, tmp1, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
-
-  function program1(depth0,data) {
-    
-    var buffer = "", stack1;
-    buffer += "\n  <a class=\"header-link\" href=\"";
-    foundHelper = helpers.href;
-    stack1 = foundHelper || depth0.href;
-    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
-    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "href", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "\">";
-    foundHelper = helpers.title;
-    stack1 = foundHelper || depth0.title;
-    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
-    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "title", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "</a>\n";
-    return buffer;}
-
-    foundHelper = helpers.items;
-    stack1 = foundHelper || depth0.items;
-    stack2 = helpers.each;
-    tmp1 = self.program(1, program1, data);
-    tmp1.hash = {};
-    tmp1.fn = tmp1;
-    tmp1.inverse = self.noop;
-    stack1 = stack2.call(depth0, stack1, tmp1);
-    if(stack1 || stack1 === 0) { return stack1; }
-    else { return ''; }});
-}});
-
 window.require.define({"views/templates/home": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
     var foundHelper, self=this;
 
 
-    return "<h1>Yeticorn</h1>\n\n<form method=\"post\" action=\"/\">\n\n  <div>\n    <p>Enter your name:</p>\n  </div>\n\n  <div>\n    <input type=\"text\" />\n  </div>\n\n  <div>\n    <input type=\"submit\" value=\"Invite Players &raquo;\" />\n  </div>\n\n</form>";});
-}});
-
-window.require.define({"views/templates/login": function(exports, require, module) {
-  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
-    helpers = helpers || Handlebars.helpers;
-    var buffer = "", foundHelper, self=this;
-
-
-    return buffer;});
+    return "<h1>Yeticorn</h1>\n\n<form method=\"post\" action=\"/\">\n\n  <div>\n    <input type=\"text\" placeholder=\"Player Name\" />\n  </div>\n\n  <div>\n    <input type=\"submit\" value=\"Invite Players &raquo;\" />\n  </div>\n\n</form>";});
 }});
 
