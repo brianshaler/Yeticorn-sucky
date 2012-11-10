@@ -502,49 +502,137 @@ table {
     border-collapse: collapse;
     border-spacing: 0;
 }
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  font-family: inherit;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+body {
+  line-height: 1;
+  color: #000;
+  background: #fff;
+}
+ol,
+ul {
+  list-style: none;
+}
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  vertical-align: middle;
+}
+caption,
+th,
+td {
+  text-align: left;
+  font-weight: normal;
+  vertical-align: middle;
+}
+a img {
+  border: none;
+}
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 body {
-  background: #000;
-}
-.header {
-  width: 476px;
-  margin: 0 auto;
-  padding: 10px;
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
-  background-color: #4276b6;
-}
-.header-link {
-  margin-right: 32px;
-  text-decoration: none;
-  color: #eee;
-}
-.header-link:visited {
-  color: #eee;
-}
-.header-link:hover {
-  text-decoration: underline;
-}
-.header-link:last-child {
-  margin-right: 0;
+  background: #fff;
+  font-family: sans-serif;
 }
 .home-page {
-  max-width: 400px;
-  margin: 5px auto;
-  padding: 5px;
-  margin-bottom: 0.5em;
-  color: #fff;
-  background-color: #000;
+  background-color: #fff;
 }
-.home-page h1 {
+.home-page form {
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
   text-align: center;
 }
-.home-page input[type=submit] {
-  margin-top: 6px;
+.home-page form input {
+  text-transform: uppercase;
+  margin-top: 12px;
+  width: 50%;
+}
+.home-page form input[type=text] {
+  text-align: center;
+}
+.home-page p {
+  margin-top: 12px;
+  color: #999;
+  font-size: 16pt;
+}
+.home-page header {
+  background-color: #999;
+  padding: 15px;
+}
+.home-page h1 {
+  font-size: 24pt;
+  text-align: center;
+  color: #fff;
 }
 /* ==========================================================================
    Helper classes
