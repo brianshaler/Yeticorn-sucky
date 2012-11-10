@@ -1,5 +1,27 @@
 # Hello Yeticorn!
 
+## Development
+
+To compile the front-end code run:
+
+~~~sh
+brunch watch
+~~~
+
+To compile the server code run:
+
+~~~sh
+cake watch
+~~~
+
+When we have shared code, it can be kept in the app directory, and added to the Cakefile to be compiled from coffeescript to javascript for the server.
+
+To run the server:
+
+~~~sh
+npm start
+~~~
+
 ## Deploy instructions
 
 ### GitHub — [Team][2], [Repo][3]
