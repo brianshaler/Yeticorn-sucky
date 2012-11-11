@@ -10,6 +10,10 @@ cardHeight = 223
 module.exports = class Crystals extends Backbone.Model
   template: template
   cardTemplate: cardTemplate
+  
+  cardWidth: cardWidth
+  cardHeight: cardHeight
+  
   defaults:
     player: ''
     cards: []

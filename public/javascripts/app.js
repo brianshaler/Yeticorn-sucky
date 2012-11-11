@@ -579,6 +579,10 @@ window.require.define({"models/hand": function(exports, require, module) {
 
     Crystals.prototype.cardTemplate = cardTemplate;
 
+    Crystals.prototype.cardWidth = cardWidth;
+
+    Crystals.prototype.cardHeight = cardHeight;
+
     Crystals.prototype.defaults = {
       player: '',
       cards: [],
