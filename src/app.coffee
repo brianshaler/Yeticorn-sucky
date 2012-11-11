@@ -83,6 +83,7 @@ module.exports = class ServerApp extends Backbone.Model
                   playerId: player._id
                   gameId: game.gameId
               event.save()
+              socket.emit 'playerSetup.complete', player
         if gameId
           app.GameModel.findOne(gameId: gameId).exec (err, game) ->
             if game and not err

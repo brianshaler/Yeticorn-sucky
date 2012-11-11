@@ -109,6 +109,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.start = function() {
+      this.playerId = '';
       this.viewport = new Viewporter('outer-container');
       return this.connectSocket();
     };
@@ -149,11 +150,19 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.enteredName = function() {
-      var gameId;
+      var gameId,
+        _this = this;
       gameId = null;
       if (window.location.hash.toString().length > 1) {
         gameId = window.location.hash.toString().substr(1);
       }
+      this.socket.on('playerSetup.complete', function(data) {
+        console.log('playerSetup.complete');
+        if ((data != null ? data.playerId : void 0) != null) {
+          _this.playerId = data.playerId;
+          return console.log(data);
+        }
+      });
       return this.socket.emit('playerSetup.submit', this.playerSetupView.getName(), gameId);
     };
 
@@ -1225,7 +1234,7 @@ window.require.define({"views/templates/intro": function(exports, require, modul
     var foundHelper, self=this;
 
 
-    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n</form>";});
+    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n	<p>\n		Yeticorn is a mobile-friendly board game involving mythical yetis with unicorn horns who move, cast spells, and attack using energy from magic crystals. \n	</p>\n	<p>\n		The goal is to kill your opponents by reducing their life points to zero. \n	</p>\n	<p>\n		The game is played on a map where players move their yeticorn character on the board to collect cards and attack opponents.\n	</p> \n	<p>\n		Good Luck!\n	</p>\n	\n</form>";});
 }});
 
 window.require.define({"views/templates/player_setup": function(exports, require, module) {
