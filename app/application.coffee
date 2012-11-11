@@ -16,6 +16,7 @@ module.exports = class Application extends Backbone.Model
       window.viewportHeight = event.height
 
   start: ->
+    @playerId = ''
     @viewport = new Viewporter 'outer-container'
     @connectSocket()
 
@@ -46,6 +47,11 @@ module.exports = class Application extends Backbone.Model
     gameId = null
     if window.location.hash.toString().length > 1
       gameId = window.location.hash.toString().substr(1)
+    @socket.on 'playerSetup.complete', (data) =>
+      console.log 'playerSetup.complete'
+      if data?.playerId?
+        @playerId = data.playerId
+        console.log data
     @socket.emit 'playerSetup.submit', @playerSetupView.getName(), gameId
 
   gameSetup: ->
@@ -60,6 +66,6 @@ module.exports = class Application extends Backbone.Model
     @showGame()
 
   showGame: ->
-    @model = new Game()
+    @model = new Game(@socket)
     @gameView = new GameView({@model})
     @gameView.render()

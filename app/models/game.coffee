@@ -1,4 +1,8 @@
 module.exports = class Game extends Backbone.Model
   defaults:
-    tiles: [
-    ]
+    gameId: ''
+    tiles: []
+  
+  initialize: (@socket) ->
+  #@socket.emit 'game.hello', @attributes.gameId
+    

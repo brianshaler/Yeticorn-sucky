@@ -109,6 +109,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.start = function() {
+      this.playerId = '';
       this.viewport = new Viewporter('outer-container');
       return this.connectSocket();
     };
@@ -148,11 +149,19 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.enteredName = function() {
-      var gameId;
+      var gameId,
+        _this = this;
       gameId = null;
       if (window.location.hash.toString().length > 1) {
         gameId = window.location.hash.toString().substr(1);
       }
+      this.socket.on('playerSetup.complete', function(data) {
+        console.log('playerSetup.complete');
+        if ((data != null ? data.playerId : void 0) != null) {
+          _this.playerId = data.playerId;
+          return console.log(data);
+        }
+      });
       return this.socket.emit('playerSetup.submit', this.playerSetupView.getName(), gameId);
     };
 
@@ -172,7 +181,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.showGame = function() {
-      this.model = new Game();
+      this.model = new Game(this.socket);
       this.gameView = new GameView({
         model: this.model
       });
@@ -475,7 +484,12 @@ window.require.define({"models/game": function(exports, require, module) {
     }
 
     Game.prototype.defaults = {
+      gameId: '',
       tiles: []
+    };
+
+    Game.prototype.initialize = function(socket) {
+      this.socket = socket;
     };
 
     return Game;
