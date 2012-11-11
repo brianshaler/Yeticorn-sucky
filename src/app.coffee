@@ -12,13 +12,14 @@ module.exports = class ServerApp extends Backbone.Model
 
   initialize: ->
     @games = {}
-    @gameSockets = {}
+    @gamesByGameId = {}
     @players = {}
+
+    @gameSockets = {}
     @playerSockets = {}
 
     @rootPath = path.dirname(path.normalize(__dirname))
     @initExpress()
-    @initMongo()
     @initSockets()
 
   initExpress: ->
@@ -35,38 +36,40 @@ module.exports = class ServerApp extends Backbone.Model
       @app.use express.static(path.join(@rootPath, 'public'))
       @app.use express.errorHandler()
 
-  initMongo: ->
-    app = @
-    @db = db.db
-    @GameModel = db.GameModel
-    @PlayerModel = db.PlayerModel
-    @EventModel = db.EventModel
-    @CardModel = db.CardModel
-    @TileModel = db.TileModel
-    @eventStream = null
-    @startEventStream()
+  playerSetup: (socket, playerName, gameId) ->
+    # Create Game
+    game = null
+    if gameId
+      game = @gamesByGameId[gameId]
+    else
+      game = new db.GameModel
+        gameId: idgen()
+    unless game
+      console.log 'game not found', gameId
+      return
+    @games[game._id] = game
+    @gamesByGameId[game.gameId] = game
 
-  startEventStream: ->
-    app = @
-    @eventStream = @EventModel.find().tailable().limit(1).stream()
-    @eventStream.on 'error', (err) ->
-      console.error err
-    @eventStream.on 'data', (event) ->
-      if event.action == 'game.join'
-        app.joinGame event
-    #@eventStream.on 'error', (err) ->
-    #  console.error err
-    #  @eventStream.destroy()
-    #@eventStream.on 'close', ->
-    #  console.log 'Event stream closed. Starting a new one.'
-    #  app.startEventStream()
+    # Create Player
+    player = new db.PlayerModel
+      name: playerName
+      game: game
+    @players[player._id] = player
 
-  joinGame: (event) ->
-    app = @
-    @GameModel.findById(event.game).populate('players').exec (err, game) ->
-      gameSockets = app.gameSockets[game.gameId]
-      _.each gameSockets, (socket) ->
-        socket.emit 'gameSetup.show', game
+    # Add player to game
+    game.players.push player
+    game.players[game.players.length - 1] = player  # do what populate would do and make it real
+
+    # Save sockets for future messages
+    @gameSockets[game.gameId] or= {}
+    @gameSockets[game.gameId][socket.id] = socket
+    @playerSockets[player._id] or= {}
+    @playerSockets[player._id][socket.id] = socket
+
+    # Send message to everyone in the game
+    gameSockets = @gameSockets[game.gameId]
+    _.each gameSockets, (socket) ->
+      socket.emit 'gameSetup.show', game
 
   initSockets: ->
     @io = socketio.listen @server
@@ -74,42 +77,7 @@ module.exports = class ServerApp extends Backbone.Model
     app = @
     @io.sockets.on 'connection', (socket) ->
       socket.emit 'intro.show'
-      socket.on 'playerSetup.submit', (name, gameId) ->
-        gameSetup = (game) ->
-          player = new app.PlayerModel
-            name: name
-            game: game
-          player.save (err) ->
-            if err
-              console.error err
-              return
-            game.players.push player
-            game.save (err) ->
-              if err
-                console.error err
-                return
-              app.games[game.gameId] = game
-              app.gameSockets[game.gameId] or= {}
-              app.gameSockets[game.gameId][socket.id] = socket
-              app.players[player._id] = player
-              app.playerSockets[player._id] or= {}
-              app.playerSockets[player._id][socket.id] = socket
-              event = new app.EventModel
-                game: game
-                player: player
-                action: 'game.join'
-                data:
-                  playerId: player._id
-                  gameId: game.gameId
-              event.save()
-        if gameId
-          app.GameModel.findOne(gameId: gameId).exec (err, game) ->
-            if game and not err
-              gameSetup game
-        else
-          game = new app.GameModel gameId: idgen()
-          game.save (err) ->
-            unless err
-              gameSetup game
+      socket.on 'playerSetup.submit', (playerName, gameId) ->
+        app.playerSetup socket, playerName, gameId
       socket.on 'gameSetup.submit', ->
         socket.emit 'game.show'
