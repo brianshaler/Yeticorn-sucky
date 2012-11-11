@@ -11,9 +11,7 @@ module.exports = class Tile extends Backbone.Model
   tileWidth: 240
   tileHeight: 210
 
-  initialize: (props = {}) ->
-    for prop, val of props
-      @attributes[prop] = val
+  initialize: ->
     @div = $ '<div>'
 
   createHitarea: (paper) ->

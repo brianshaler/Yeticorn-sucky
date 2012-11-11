@@ -198,6 +198,59 @@ window.require.define({"initialize": function(exports, require, module) {
   
 }});
 
+window.require.define({"models/crystals": function(exports, require, module) {
+  var Crystals, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/crystals');
+
+  module.exports = Crystals = (function(_super) {
+
+    __extends(Crystals, _super);
+
+    function Crystals() {
+      return Crystals.__super__.constructor.apply(this, arguments);
+    }
+
+    Crystals.prototype.template = template;
+
+    Crystals.prototype.defaults = {
+      crystals: []
+    };
+
+    Crystals.prototype.initialize = function() {
+      return this.div = $('<div>');
+    };
+
+    Crystals.prototype.update = function(prop, val) {
+      var props;
+      if (typeof prop === 'object') {
+        props = prop;
+      } else {
+        props = {};
+        props[prop] = val;
+      }
+      for (prop in props) {
+        val = props[prop];
+        if ((prop != null) && this.attributes.hasOwnProperty(prop)) {
+          this.attributes[prop] = val;
+        }
+        this[prop] = val;
+      }
+      return this.render();
+    };
+
+    Crystals.prototype.render = function() {
+      return this.div.html(this.template(this));
+    };
+
+    return Crystals;
+
+  })(Backbone.Model);
+  
+}});
+
 window.require.define({"models/game": function(exports, require, module) {
   var Game,
     __hasProp = {}.hasOwnProperty,
@@ -309,15 +362,7 @@ window.require.define({"models/tile": function(exports, require, module) {
 
     Tile.prototype.tileHeight = 210;
 
-    Tile.prototype.initialize = function(props) {
-      var prop, val;
-      if (props == null) {
-        props = {};
-      }
-      for (prop in props) {
-        val = props[prop];
-        this.attributes[prop] = val;
-      }
+    Tile.prototype.initialize = function() {
       return this.div = $('<div>');
     };
 
