@@ -646,23 +646,20 @@ window.require.define({"models/hand": function(exports, require, module) {
         $('.cards', this.div).append(card.div);
       }
       $('.playing-card', this.div).bind('click touchstart', this.onCardClick);
-      scale = this.isLandscape ? this.width / 200 * .8 : this.height / 300 * .8;
+      scale = this.isLandscape ? this.width / 200 * .7 : this.height / 300 * .8;
       count = 0;
       _ref1 = this.cards;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         card = _ref1[_j];
-        x = !this.isLandscape ? count * 100 : 0;
-        x += this.width / 2 - 100 + this.pseudoRandom(count * Math.PI * 1000, -10, 10);
-        x *= scale;
-        y = this.isLandscape ? count * 100 : 0;
-        y += this.pseudoRandom(count * Math.PI * 2000, 0, 4);
-        y *= scale;
+        x = !this.isLandscape ? this.width / 2 / scale + (count - this.cards.length * .5) * 150 : this.width / 2 / scale;
+        x += this.pseudoRandom(count * Math.PI * 1000, 0, 10);
+        y = this.isLandscape ? this.height / 2 / scale + (1 + count - this.cards.length * .5) * 100 : this.height / 2 / scale;
+        y += this.pseudoRandom(count * Math.PI * 2000, 0, 10);
         r = this.pseudoRandom(count * Math.PI * 3000, -10, 10);
         cardScale = scale * 1;
         card.div.css({
           "transform-origin": "50% 50%",
-          transform: "translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg) scale(" + cardScale + ")",
-          top: 10 * count
+          transform: "translate3d(-100px, -150px, 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)"
         });
         count++;
       }

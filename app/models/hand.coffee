@@ -71,22 +71,21 @@ module.exports = class Crystals extends Backbone.Model
     
     $('.playing-card', @div).bind('click touchstart', @onCardClick)
     
-    scale = if @isLandscape then @width / 200 * .8 else @height / 300 * .8
+    scale = if @isLandscape then @width / 200 * .7 else @height / 300 * .8
     
     count = 0
     for card in @cards
-      x = if !@isLandscape then count*100 else 0
-      x += @width / 2 - 100 + @pseudoRandom count*Math.PI*1000, -10, 10
-      x *= scale
-      y = if @isLandscape then count*100 else 0
-      y +=  @pseudoRandom count*Math.PI*2000, 0, 4
-      y *= scale
+      x = if !@isLandscape then @width / 2 / scale + (count - @cards.length*.5)*150 else @width / 2 / scale
+      x += @pseudoRandom count*Math.PI*1000, 0, 10
+      #x *= scale
+      y = if @isLandscape then @height / 2 / scale + (1 + count - @cards.length*.5)*100 else @height / 2 / scale
+      y += @pseudoRandom count*Math.PI*2000, 0, 10
+      #y *= scale
       r = @pseudoRandom count*Math.PI*3000, -10, 10
       cardScale = scale * 1
       card.div.css
         "transform-origin": "50% 50%"
-        transform: "translate3d(#{x}px, #{y}px, 0px) rotateZ(#{r}deg) scale(#{cardScale})"
-        top: 10*count
+        transform: "translate3d(-100px, -150px, 0px) scale(#{cardScale}) translate3d(#{x}px, #{y}px, 0px) rotateZ(#{r}deg)"
       count++
     
     @cached = true
