@@ -181,7 +181,7 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.showGame = function() {
-      this.model = new Game();
+      this.model = new Game(this.socket);
       this.gameView = new GameView({
         model: this.model
       });
@@ -484,7 +484,12 @@ window.require.define({"models/game": function(exports, require, module) {
     }
 
     Game.prototype.defaults = {
+      gameId: '',
       tiles: []
+    };
+
+    Game.prototype.initialize = function(socket) {
+      this.socket = socket;
     };
 
     return Game;
