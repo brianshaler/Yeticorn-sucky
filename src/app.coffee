@@ -48,7 +48,7 @@ module.exports = class ServerApp extends Backbone.Model
       console.log 'game not found', gameId
       return
     @games[game._id] = game
-    @gamesByGameId[game.gameId] = game
+    @gamesByGameId[game.gameId.toString()] = game
 
     # Create Player
     player = new db.PlayerModel
@@ -71,6 +71,16 @@ module.exports = class ServerApp extends Backbone.Model
     _.each gameSockets, (socket) ->
       socket.emit 'gameSetup.show', game
 
+  gameSetup: (event) ->
+    game = @gamesByGameId[event.gameId]
+    unless game
+      console.log 'game not found', gameId
+      return
+
+    gameSockets = @gameSockets[game.gameId]
+    _.each gameSockets, (socket) ->
+      socket.emit 'gameSetup.complete', game
+
   initSockets: ->
     @io = socketio.listen @server
 
@@ -79,5 +89,5 @@ module.exports = class ServerApp extends Backbone.Model
       socket.emit 'intro.show'
       socket.on 'playerSetup.submit', (playerName, gameId) ->
         app.playerSetup socket, playerName, gameId
-      socket.on 'gameSetup.submit', ->
-        socket.emit 'game.show'
+      socket.on 'gameSetup.submit', (event) ->
+        app.gameSetup event

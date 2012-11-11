@@ -140,6 +140,7 @@ module.exports = class GameView extends Backbone.View
     $('svg', $('#map-overlay')).width(fullMapWidth).height(fullMapHeight).attr width: fullMapWidth+"px", height: fullMapHeight+"px"
 
   renderCrystals: () ->
+    return unless @crystals
     @crystals.update
       width: @crystalsWidth
       height: @crystalsHeight
