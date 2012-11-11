@@ -36,14 +36,11 @@ module.exports = class ServerApp extends Backbone.Model
       @app.use express.errorHandler()
 
   initMongo: ->
+    app = @
     @db = db.db
     @GameModel = db.GameModel
     @PlayerModel = db.PlayerModel
     @EventModel = db.EventModel
-    @eventStream = null
-
-  startEventStream: ->
-    app = @
     @eventStream = @EventModel.find().limit(10).tailable().populate('game').stream()
     @eventStream.on 'error', (err) ->
       console.error err
@@ -55,12 +52,6 @@ module.exports = class ServerApp extends Backbone.Model
         console.log 'in join', gameSockets
         _.each gameSockets, (socket) ->
           socket.emit 'gameSetup.show', event.game
-    @eventStream.on 'error', (err) ->
-      console.error err
-      @eventStream.destroy()
-    @eventStream.on 'close', ->
-      console.log 'Event stream closed. Starting a new one.'
-      app.startEventStream()
 
   initSockets: ->
     @io = socketio.listen @server
