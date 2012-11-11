@@ -198,13 +198,73 @@ window.require.define({"initialize": function(exports, require, module) {
   
 }});
 
+window.require.define({"models/card": function(exports, require, module) {
+  var Card, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/card');
+
+  module.exports = Card = (function(_super) {
+
+    __extends(Card, _super);
+
+    function Card() {
+      return Card.__super__.constructor.apply(this, arguments);
+    }
+
+    Card.prototype.template = template;
+
+    Card.prototype.defaults = {
+      type: ''
+    };
+
+    Card.prototype.render = function() {
+      return this.div.html(this.template(this));
+    };
+
+    return Card;
+
+  })(Backbone.Model);
+  
+}});
+
+window.require.define({"models/crystal_card": function(exports, require, module) {
+  var Card, Crystal,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Card = require('models/card');
+
+  module.exports = Crystal = (function(_super) {
+
+    __extends(Crystal, _super);
+
+    function Crystal() {
+      return Crystal.__super__.constructor.apply(this, arguments);
+    }
+
+    Crystal.prototype.initialize = function() {
+      return this.type = 'crystal';
+    };
+
+    return Crystal;
+
+  })(Card);
+  
+}});
+
 window.require.define({"models/crystals": function(exports, require, module) {
-  var Crystals, template,
+  var Crystal, Crystals, cardTemplate, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   template = require('views/templates/crystals');
+
+  cardTemplate = require('views/templates/card');
+
+  Crystal = require('models/crystal_card');
 
   module.exports = Crystals = (function(_super) {
 
@@ -212,32 +272,46 @@ window.require.define({"models/crystals": function(exports, require, module) {
 
     function Crystals() {
       this.render = __bind(this.render, this);
+
+      this.onStackClick = __bind(this.onStackClick, this);
       return Crystals.__super__.constructor.apply(this, arguments);
     }
 
     Crystals.prototype.template = template;
 
+    Crystals.prototype.cardTemplate = cardTemplate;
+
     Crystals.prototype.defaults = {
-      crystals: [
-        [
-          {
-            _id: "asdf1"
-          }, {
-            _id: "asdf2"
-          }
-        ], [], [], [], [
-          {
-            _id: "asdf2"
-          }
-        ], []
-      ]
+      player: '',
+      crystals: [[], [], [], [], [], []],
+      lastRender: [-1, 0, 0, 0, 0, 0]
     };
 
     Crystals.prototype.initialize = function() {
+      var prop, val, _ref;
       this.div = $('<div>');
       this.width = 1;
       this.height = 1;
-      return this.crystals = this.attributes.crystals;
+      _ref = this.attributes;
+      for (prop in _ref) {
+        val = _ref[prop];
+        this[prop] = val;
+      }
+      this.crystals[0].push(new Crystal());
+      this.crystals[0].push(new Crystal());
+      this.crystals[0].push(new Crystal());
+      this.crystals[2].push(new Crystal());
+      this.crystals[2].push(new Crystal());
+      this.crystals[2].push(new Crystal());
+      this.crystals[3].push(new Crystal());
+      this.crystals[3].push(new Crystal());
+      this.crystals[3].push(new Crystal());
+      this.crystals[3].push(new Crystal());
+      this.crystals[3].push(new Crystal());
+      this.crystals[4].push(new Crystal());
+      this.crystals[4].push(new Crystal());
+      this.crystals[4].push(new Crystal());
+      return this.crystals[5].push(new Crystal());
     };
 
     Crystals.prototype.update = function(prop, val) {
@@ -271,21 +345,82 @@ window.require.define({"models/crystals": function(exports, require, module) {
       return this.render();
     };
 
-    Crystals.prototype.render = function() {
-      this.crystals0 = this.crystals[0].length;
-      this.crystals1 = this.crystals[1].length;
-      this.crystals2 = this.crystals[2].length;
-      this.crystals3 = this.crystals[3].length;
-      this.crystals4 = this.crystals[4].length;
-      this.crystals5 = this.crystals[5].length;
+    Crystals.prototype.onStackClick = function(e) {
+      var crystal, energy, _ref;
+      energy = parseInt($(e.target).attr('data-energy'));
+      if (energy > 0 && ((_ref = this.crystals[energy]) != null ? _ref.length : void 0) > 0) {
+        crystal = this.crystals[energy][this.crystals[energy].length(-1)];
+        return this.spendCrystal(crystal);
+      }
+    };
+
+    Crystals.prototype.spendCrystal = function(crystal) {};
+
+    Crystals.prototype.render = function(force) {
+      var card, cardScale, count, crystal, i, r, scale, slot, stack, stacks, thisRender, unchanged, unscaledWidth, x, y, _i, _j, _k, _len, _ref, _ref1, _ref2;
+      if (force == null) {
+        force = false;
+      }
+      unchanged = true;
+      thisRender = [];
+      for (i = _i = 0, _ref = this.crystals.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        this["crystals" + i] = this.crystals[i].length;
+        if (this.crystals[i].length !== this.lastRender[i]) {
+          unchanged = false;
+        }
+        thisRender[i] = this.crystals[i].length;
+      }
+      if (unchanged && !force && 1 === 2) {
+        return this;
+      }
+      unscaledWidth = 800;
+      this.stackWidth = Math.floor(this.width / 6);
+      console.log("Scale: " + unscaledWidth + "/" + this.stackWidth);
+      scale = this.width / (unscaledWidth * 6);
       this.div.html(this.template(this));
       this.div.height(this.height).css({
         top: "" + this.top + "px"
       });
-      return $('.crystals-stack', this.div).css({
-        width: Math.floor(this.width / 6 - 2) + "px",
+      stacks = $('.crystals-stack', this.div).css({
+        width: "" + this.stackWidth + "px",
         height: "" + this.height + "px"
-      });
+      }).bind('click touchstart', this.onStackClick);
+      for (i = _j = 0, _ref1 = this.crystals.length - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+        slot = $(".crystals-stack-" + i, this.div);
+        slot.css({
+          left: i * this.stackWidth + "px"
+        });
+        stack = $(".cards", slot);
+        console.log(stack);
+        count = 0;
+        _ref2 = this.crystals[i];
+        for (_k = 0, _len = _ref2.length; _k < _len; _k++) {
+          crystal = _ref2[_k];
+          x = this.stackWidth / 2 / scale - 120 + this.pseudoRandom((i * Math.PI * 1000) * count, -10, 10);
+          x *= scale;
+          y = 100 * this.height / this.stackWidth + count * 20 + this.pseudoRandom((i * Math.PI * 2000) * count, 0, 4);
+          y *= scale;
+          r = this.pseudoRandom((i * Math.PI * 3000) * count, -10, 10);
+          card = $('<div>').append($(this.cardTemplate(crystal)));
+          cardScale = scale * 1.4;
+          card.css({
+            "transform-origin": "50% 50%",
+            transform: "translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg) scale(" + cardScale + ")",
+            top: 10 * count
+          });
+          stack.append(card);
+          count++;
+        }
+      }
+      this.lastRender = thisRender;
+      return this;
+    };
+
+    Crystals.prototype.pseudoRandom = function(seed, min, max) {
+      var r;
+      r = seed * Math.PI * 1000000;
+      r = r - Math.floor(r);
+      return (max - min) * r + min;
     };
 
     return Crystals;
@@ -377,6 +512,31 @@ window.require.define({"models/game": function(exports, require, module) {
   
 }});
 
+window.require.define({"models/spell_card": function(exports, require, module) {
+  var Card, Spell,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Card = require('models/card');
+
+  module.exports = Spell = (function(_super) {
+
+    __extends(Spell, _super);
+
+    function Spell() {
+      return Spell.__super__.constructor.apply(this, arguments);
+    }
+
+    Spell.prototype.initialize = function() {
+      return this.type = 'spell';
+    };
+
+    return Spell;
+
+  })(Card);
+  
+}});
+
 window.require.define({"models/tile": function(exports, require, module) {
   var Tile, template,
     __hasProp = {}.hasOwnProperty,
@@ -412,8 +572,12 @@ window.require.define({"models/tile": function(exports, require, module) {
     Tile.prototype.createHitarea = function(paper) {
       var _this = this;
       this.hitarea = paper.path("M0,0L0,0");
-      return $(this.hitarea.node).on('click touchstart', function(e) {
-        return _this.trigger('selectedTile', _this);
+      return $(this.hitarea.node).on('click touchend', function(e) {
+        e.preventDefault();
+        setTimeout(function() {
+          return _this.trigger('selectedTile', _this);
+        }, 1);
+        return false;
       });
     };
 
@@ -460,6 +624,31 @@ window.require.define({"models/tile": function(exports, require, module) {
     return Tile;
 
   })(Backbone.Model);
+  
+}});
+
+window.require.define({"models/weapon_card": function(exports, require, module) {
+  var Card, Weapon,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Card = require('models/card');
+
+  module.exports = Weapon = (function(_super) {
+
+    __extends(Weapon, _super);
+
+    function Weapon() {
+      return Weapon.__super__.constructor.apply(this, arguments);
+    }
+
+    Weapon.prototype.initialize = function() {
+      return this.type = 'weapon';
+    };
+
+    return Weapon;
+
+  })(Card);
   
 }});
 
@@ -603,23 +792,37 @@ window.require.define({"views/game_view": function(exports, require, module) {
       event.initEvent('viewportchanged', true, true);
       event.width = window.viewportWidth;
       event.height = window.viewportHeight;
-      event.isLandscape = true;
+      event.isLandscape = window.innerWidth > window.innerHeight;
       return window.dispatchEvent(event);
     };
 
     GameView.prototype.resizeWindow = function(e) {
-      var event, isPlayer;
+      var event, horizontalSize, isPlayer, verticalSize;
       event = e.originalEvent;
       isPlayer = true;
-      this.viewportWidth = event.width - 1;
+      if (this.viewportWidth === event.width && this.viewportHeight === event.height) {
+        return this;
+      }
+      this.viewportWidth = event.width;
       this.viewportHeight = event.height - 1;
-      this.mapWidth = isPlayer ? Math.round(this.viewportWidth * .79) : this.viewportWidth;
-      this.mapHeight = isPlayer ? Math.round(this.viewportHeight * .81) : this.viewportHeight;
-      this.handWidth = this.viewportWidth - this.mapWidth;
-      this.crystalsHeight = this.viewportHeight - this.mapHeight;
+      this.isLandscape = event.isLandscape;
+      horizontalSize = .79;
+      verticalSize = .81;
+      if (!this.isLandscape) {
+        verticalSize *= verticalSize;
+      }
+      this.mapWidth = isPlayer && this.isLandscape ? Math.round(this.viewportWidth * horizontalSize) : this.viewportWidth;
+      this.mapHeight = isPlayer ? Math.round(this.viewportHeight * verticalSize) : this.viewportHeight;
+      this.handWidth = this.isLandscape ? this.viewportWidth - this.mapWidth : this.viewportWidth;
+      this.handHeight = this.isLandscape ? this.viewportHeight : (this.viewportHeight - this.mapHeight) / 2;
+      this.crystalsWidth = this.viewportWidth - (this.isLandscape ? this.handWidth : 0);
+      this.crystalsHeight = (this.viewportHeight - this.mapHeight) * (this.isLandscape ? 1 : .5);
+      if (!isPlayer) {
+        this.handWidth = this.handHeight = this.crystalsWidth = this.crystalsHeight = 0;
+      }
       this.renderMap();
       if (isPlayer) {
-        this.renderCrystals();
+        this.renderCrystals(true);
         return this.renderHand();
       } else {
         $('.crystals-holder').hide();
@@ -636,6 +839,9 @@ window.require.define({"views/game_view": function(exports, require, module) {
       scale = scaleX < scaleY ? scaleX : scaleY;
       offsetX = Math.ceil((this.mapWidth - fullMapWidth * scale) / 2);
       offsetY = Math.ceil((this.mapHeight - fullMapHeight * scale) / 2);
+      if (!this.isLandscape) {
+        offsetY += this.handHeight;
+      }
       transform = "scale(" + scale + ")";
       $('.game-board').css({
         '-webkit-transform': transform,
@@ -656,7 +862,7 @@ window.require.define({"views/game_view": function(exports, require, module) {
 
     GameView.prototype.renderCrystals = function() {
       this.crystals.update({
-        width: this.viewportWidth - this.handWidth,
+        width: this.crystalsWidth,
         height: this.crystalsHeight,
         top: this.viewportHeight - this.crystalsHeight
       });
@@ -666,7 +872,7 @@ window.require.define({"views/game_view": function(exports, require, module) {
     GameView.prototype.renderHand = function() {
       var left;
       left = this.viewportWidth - this.handWidth;
-      return $('.hand-holder').width(this.handWidth).height(this.viewportHeight).css({
+      return $('.hand-holder').width(this.handWidth).height(this.handHeight).css({
         left: "" + left + "px"
       });
     };
@@ -802,38 +1008,53 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
   
 }});
 
+window.require.define({"views/templates/card": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var buffer = "", stack1, foundHelper, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
+
+
+    buffer += "<div class=\"playing-card\">\n  <h2>Card:</h2>\n  <h1>";
+    foundHelper = helpers.type;
+    stack1 = foundHelper || depth0.type;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "type", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "</h1>\n</div>";
+    return buffer;});
+}});
+
 window.require.define({"views/templates/crystals": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
     var buffer = "", stack1, foundHelper, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
 
 
-    buffer += "<div class=\"crystals-stack crystals-stack-0\">\n  <div class=\"label\">0pt</div>\n  <div class=\"card-count\">";
+    buffer += "<div class=\"crystals-stack crystals-stack-0\" data-energy=\"0\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">0pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals0;
     stack1 = foundHelper || depth0.crystals0;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals0", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-1\">\n  <div class=\"label\">1pt</div>\n  <div class=\"card-count\">";
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-1\" data-energy=\"1\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">1pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals1;
     stack1 = foundHelper || depth0.crystals1;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals1", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-2\">\n  <div class=\"label\">2pt</div>\n  <div class=\"card-count\">";
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-2\" data-energy=\"2\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">2pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals2;
     stack1 = foundHelper || depth0.crystals2;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals2", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-3\">\n  <div class=\"label\">3pt</div>\n  <div class=\"card-count\">";
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-3\" data-energy=\"3\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">3pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals3;
     stack1 = foundHelper || depth0.crystals3;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals3", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-4\">\n  <div class=\"label\">4pt</div>\n  <div class=\"card-count\">";
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-4\" data-energy=\"4\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">4pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals4;
     stack1 = foundHelper || depth0.crystals4;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals4", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-5\">\n  <div class=\"label\">5pt</div>\n  <div class=\"card-count\">";
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-5\" data-energy=\"5\">\n  <div class=\"cards\"></div>\n  <div class=\"label unscaled\">5pt</div>\n  <div class=\"card-count unscaled\">";
     foundHelper = helpers.crystals5;
     stack1 = foundHelper || depth0.crystals5;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }

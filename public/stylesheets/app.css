@@ -632,22 +632,46 @@ h1 {
   font-size: 16pt;
 }
 .outer-container {
+  position: absolute;
   width: 100%;
   max-width: 100%;
   overflow: hidden;
 }
 .game-page {
   position: absolute;
-  -webkit-transform: translate3d(0px, 0px, 0px);
-  -moz-transform: translate3d(0px, 0px, 0px);
-  -o-transform: translate3d(0px, 0px, 0px);
-  -ms-transform: translate3d(0px, 0px, 0px);
-  transform: translate3d(0px, 0px, 0px);
   -webkit-transform-origin: 0 0;
   -moz-transform-origin: 0 0;
   -o-transform-origin: 0 0;
   -ms-transform-origin: 0 0;
   transform-origin: 0 0;
+}
+.game-page .playing-card {
+  position: absolute;
+  border: solid 10px #fff;
+  background-color: #ddd;
+  width: 200px;
+  height: 300px;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
+  -webkit-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.5);
+}
+.game-page .playing-card h1,
+.game-page .playing-card h2 {
+  color: #666;
+  text-align: center;
+  margin-top: 30px;
+}
+.game-page .playing-card h1 {
+  font-size: 32px;
+}
+.game-page .playing-card h2 {
+  font-size: 24px;
 }
 .game-page .game-board {
   position: absolute;
@@ -676,16 +700,38 @@ h1 {
   background-color: #77a;
 }
 .game-page .crystals-holder .crystals-stack {
-  float: left;
+  -webkit-transform: translate3d(0px, 0px, 0px);
+  -moz-transform: translate3d(0px, 0px, 0px);
+  -o-transform: translate3d(0px, 0px, 0px);
+  -ms-transform: translate3d(0px, 0px, 0px);
+  transform: translate3d(0px, 0px, 0px);
+  position: absolute;
   background-color: #006599;
-  margin: 0px 1px 0px 1px;
+  border-left: solid 1px #fff;
+  border-right: solid 1px #fff;
 }
 .game-page .crystals-holder .crystals-stack .label {
+  position: absolute;
   color: #fff;
+  background: rgba(0,0,0,0.3);
+  padding: 0px 4px 4px 4px;
 }
 .game-page .crystals-holder .crystals-stack .card-count {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  padding: 0px 4px 4px 4px;
   color: #fff;
+  background: rgba(0,0,0,0.3);
   font-size: 150%;
+  -webkit-transform-origin: 100% 100%;
+  -moz-transform-origin: 100% 100%;
+  -o-transform-origin: 100% 100%;
+  -ms-transform-origin: 100% 100%;
+  transform-origin: 100% 100%;
+}
+.game-page .crystals-holder .crystals-stack .cards {
+  position: absolute;
 }
 .game-page .hand-holder {
   position: absolute;

@@ -16,8 +16,12 @@ module.exports = class Tile extends Backbone.Model
 
   createHitarea: (paper) ->
     @hitarea = paper.path "M0,0L0,0"
-    $(@hitarea.node).on 'click touchstart', (e) =>
-      @trigger 'selectedTile', @
+    $(@hitarea.node).on 'click touchend', (e) =>
+      e.preventDefault()
+      setTimeout () =>
+        @trigger 'selectedTile', @
+      , 1
+      false
 
   update: (prop, val) ->
     if typeof prop == 'object'
