@@ -50,7 +50,7 @@ module.exports = class Application extends Backbone.Model
     @socket.emit 'playerSetup.submit', @playerSetupView.getName(), gameId
 
   gameSetup: ->
-    window.location.hash = @gameData.key
+    window.location.hash = @gameData.gameId
     @gameSetupView = new GameSetupView()
     @gameSetupView.render()
     @gameSetupView.on 'clickedStart', =>
