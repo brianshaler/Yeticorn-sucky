@@ -3,6 +3,11 @@
 </header>
 
 <form>
+  <ul>
+    {{#each players}}
+      <li>{{name}}</li>
+    {{/each}}
+  </ul>
   <div>
     <a href="#" class="start">Start!</a>
   </div>

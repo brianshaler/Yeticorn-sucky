@@ -41,17 +41,30 @@ module.exports = class ServerApp extends Backbone.Model
     @GameModel = db.GameModel
     @PlayerModel = db.PlayerModel
     @EventModel = db.EventModel
-    @eventStream = @EventModel.find().limit(10).tailable().populate('game').stream()
+    @eventStream = null
+    @startEventStream()
+
+  startEventStream: ->
+    app = @
+    @eventStream = @EventModel.find().tailable().limit(1).stream()
     @eventStream.on 'error', (err) ->
       console.error err
     @eventStream.on 'data', (event) ->
-      console.log 'event', event
-      console.log 'gameSockets', app.gameSockets
       if event.action == 'game.join'
-        gameSockets = app.gameSockets[event.game.gameId]
-        console.log 'in join', gameSockets
-        _.each gameSockets, (socket) ->
-          socket.emit 'gameSetup.show', event.game
+        app.joinGame event
+    #@eventStream.on 'error', (err) ->
+    #  console.error err
+    #  @eventStream.destroy()
+    #@eventStream.on 'close', ->
+    #  console.log 'Event stream closed. Starting a new one.'
+    #  app.startEventStream()
+
+  joinGame: (event) ->
+    app = @
+    @GameModel.findById(event.game).populate('players').exec (err, game) ->
+      gameSockets = app.gameSockets[game.gameId]
+      _.each gameSockets, (socket) ->
+        socket.emit 'gameSetup.show', game
 
   initSockets: ->
     @io = socketio.listen @server
@@ -64,9 +77,15 @@ module.exports = class ServerApp extends Backbone.Model
           player = new app.PlayerModel
             name: name
             game: game
-          game.players.push player
-          game.save (err) ->
-            unless err
+          player.save (err) ->
+            if err
+              console.error err
+              return
+            game.players.push player
+            game.save (err) ->
+              if err
+                console.error err
+                return
               app.games[game.gameId] = game
               app.gameSockets[game.gameId] or= {}
               app.gameSockets[game.gameId][socket.id] = socket

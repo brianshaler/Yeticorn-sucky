@@ -14,4 +14,6 @@ module.exports = class GameSetupView extends Backbone.View
   render: ->
     $('#page-container').html('')
     @$el.appendTo('#page-container')
-    @$el.html(@template())
+    html = @template
+      players: @players
+    @$el.html html
