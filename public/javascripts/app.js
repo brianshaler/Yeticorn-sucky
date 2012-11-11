@@ -159,7 +159,7 @@ window.require.define({"application": function(exports, require, module) {
 
     Application.prototype.gameSetup = function() {
       var _this = this;
-      window.location.hash = this.gameData.key;
+      window.location.hash = this.gameData.gameId;
       this.gameSetupView = new GameSetupView();
       this.gameSetupView.render();
       return this.gameSetupView.on('clickedStart', function() {

@@ -4,15 +4,18 @@ socketio = require 'socket.io'
 path = require 'path'
 fs = require 'fs'
 idgen = require 'idgen'
+_ = require 'underscore'
 Backbone = require 'backbone'
-mongoose = require 'mongoose'
-dbConfig = require './db/config'
-GameSchema = require './db/GameSchema'
-PlayerSchema = require './db/PlayerSchema'
+db = require './db'
 
 module.exports = class ServerApp extends Backbone.Model
 
   initialize: ->
+    @games = {}
+    @gameSockets = {}
+    @players = {}
+    @playerSockets = {}
+
     @rootPath = path.dirname(path.normalize(__dirname))
     @initExpress()
     @initMongo()
@@ -33,10 +36,22 @@ module.exports = class ServerApp extends Backbone.Model
       @app.use express.errorHandler()
 
   initMongo: ->
-    console.log dbConfig.url
-    @db = mongoose.createConnection dbConfig.url
-    @GameModel = @db.model 'Game', GameSchema
-    @PlayerModel = @db.model 'Player', PlayerSchema
+    app = @
+    @db = db.db
+    @GameModel = db.GameModel
+    @PlayerModel = db.PlayerModel
+    @EventModel = db.EventModel
+    @eventStream = @EventModel.find().limit(10).tailable().populate('game').stream()
+    @eventStream.on 'error', (err) ->
+      console.error err
+    @eventStream.on 'data', (event) ->
+      console.log 'event', event
+      console.log 'gameSockets', app.gameSockets
+      if event.action == 'game.join'
+        gameSockets = app.gameSockets[event.game.gameId]
+        console.log 'in join', gameSockets
+        _.each gameSockets, (socket) ->
+          socket.emit 'gameSetup.show', event.game
 
   initSockets: ->
     @io = socketio.listen @server
@@ -52,14 +67,26 @@ module.exports = class ServerApp extends Backbone.Model
           game.players.push player
           game.save (err) ->
             unless err
-              socket.emit 'gameSetup.show', game
-        console.log 'gameId', gameId
+              app.games[game.gameId] = game
+              app.gameSockets[game.gameId] or= {}
+              app.gameSockets[game.gameId][socket.id] = socket
+              app.players[player._id] = player
+              app.playerSockets[player._id] or= {}
+              app.playerSockets[player._id][socket.id] = socket
+              event = new app.EventModel
+                game: game
+                player: player
+                action: 'game.join'
+                data:
+                  playerId: player._id
+                  gameId: game.gameId
+              event.save()
         if gameId
-          app.GameModel.findOne(key: gameId).exec (err, game) ->
+          app.GameModel.findOne(gameId: gameId).exec (err, game) ->
             if game and not err
               gameSetup game
         else
-          game = new app.GameModel key: idgen()
+          game = new app.GameModel gameId: idgen()
           game.save (err) ->
             unless err
               gameSetup game
