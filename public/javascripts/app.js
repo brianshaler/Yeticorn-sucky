@@ -118,7 +118,6 @@ window.require.define({"application": function(exports, require, module) {
       var _this = this;
       this.socket = io.connect(window.location.href);
       this.socket.on('intro.show', function() {
-        console.log('show');
         return _this.intro();
       });
       return this.socket.on('gameSetup.show', function(gameData) {
@@ -170,6 +169,7 @@ window.require.define({"application": function(exports, require, module) {
       var _this = this;
       window.location.hash = this.gameData.gameId;
       this.gameSetupView = new GameSetupView();
+      this.gameSetupView.players = this.gameData.players;
       this.gameSetupView.render();
       return this.gameSetupView.on('clickedStart', function() {
         return _this.clickedStart();
@@ -819,9 +819,13 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
     };
 
     GameSetupView.prototype.render = function() {
+      var html;
       $('#page-container').html('');
       this.$el.appendTo('#page-container');
-      return this.$el.html(this.template());
+      html = this.template({
+        players: this.players
+      });
+      return this.$el.html(html);
     };
 
     return GameSetupView;
@@ -1218,10 +1222,31 @@ window.require.define({"views/templates/game": function(exports, require, module
 window.require.define({"views/templates/game_setup": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
-    var foundHelper, self=this;
+    var buffer = "", stack1, stack2, foundHelper, tmp1, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
 
+  function program1(depth0,data) {
+    
+    var buffer = "", stack1;
+    buffer += "\n      <li>";
+    foundHelper = helpers.name;
+    stack1 = foundHelper || depth0.name;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "name", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "</li>\n    ";
+    return buffer;}
 
-    return "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";});
+    buffer += "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <ul>\n    ";
+    foundHelper = helpers.players;
+    stack1 = foundHelper || depth0.players;
+    stack2 = helpers.each;
+    tmp1 = self.program(1, program1, data);
+    tmp1.hash = {};
+    tmp1.fn = tmp1;
+    tmp1.inverse = self.noop;
+    stack1 = stack2.call(depth0, stack1, tmp1);
+    if(stack1 || stack1 === 0) { buffer += stack1; }
+    buffer += "\n  </ul>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";
+    return buffer;});
 }});
 
 window.require.define({"views/templates/hand": function(exports, require, module) {

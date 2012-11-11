@@ -23,7 +23,6 @@ module.exports = class Application extends Backbone.Model
   connectSocket: ->
     @socket = io.connect window.location.href
     @socket.on 'intro.show', =>
-      console.log 'show'
       @intro()
     @socket.on 'gameSetup.show', (gameData) =>
       @gameData = gameData
@@ -58,6 +57,7 @@ module.exports = class Application extends Backbone.Model
   gameSetup: ->
     window.location.hash = @gameData.gameId
     @gameSetupView = new GameSetupView()
+    @gameSetupView.players = @gameData.players
     @gameSetupView.render()
     @gameSetupView.on 'clickedStart', =>
       @clickedStart()
