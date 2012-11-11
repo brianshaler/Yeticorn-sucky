@@ -41,6 +41,8 @@ module.exports = class ServerApp extends Backbone.Model
     @GameModel = db.GameModel
     @PlayerModel = db.PlayerModel
     @EventModel = db.EventModel
+    @CardModel = db.CardModel
+    @TileModel = db.TileModel
     @eventStream = null
     @startEventStream()
 

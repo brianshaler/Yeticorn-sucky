@@ -259,7 +259,7 @@ window.require.define({"models/crystal_card": function(exports, require, module)
 }});
 
 window.require.define({"models/crystals": function(exports, require, module) {
-  var Crystal, Crystals, cardTemplate, template,
+  var Crystal, Crystals, cardHeight, cardTemplate, cardWidth, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -269,6 +269,10 @@ window.require.define({"models/crystals": function(exports, require, module) {
   cardTemplate = require('views/templates/card');
 
   Crystal = require('models/crystal_card');
+
+  cardWidth = 142;
+
+  cardHeight = 223;
 
   module.exports = Crystals = (function(_super) {
 
@@ -284,6 +288,10 @@ window.require.define({"models/crystals": function(exports, require, module) {
     Crystals.prototype.template = template;
 
     Crystals.prototype.cardTemplate = cardTemplate;
+
+    Crystals.prototype.cardWidth = cardWidth;
+
+    Crystals.prototype.cardHeight = cardHeight;
 
     Crystals.prototype.defaults = {
       player: '',
@@ -399,7 +407,7 @@ window.require.define({"models/crystals": function(exports, require, module) {
         return this;
       }
       $('.crystals-stack', this.div).unbind();
-      unscaledWidth = 800;
+      unscaledWidth = 700;
       this.stackWidth = Math.floor(this.width / 6);
       scale = this.width / (unscaledWidth * 6);
       this.div.html(this.template(this));
@@ -420,9 +428,9 @@ window.require.define({"models/crystals": function(exports, require, module) {
         _ref2 = this.crystals[i];
         for (_k = 0, _len = _ref2.length; _k < _len; _k++) {
           crystal = _ref2[_k];
-          x = this.stackWidth / 2 / scale - 120 + this.pseudoRandom((i * Math.PI * 1000) * count, -10, 10);
+          x = this.stackWidth / 2 / scale - this.cardWidth * .5 + this.pseudoRandom((i * Math.PI * 1000) * count, -10, 10);
           x *= scale;
-          y = 100 * this.height / this.stackWidth + count * 20 + this.pseudoRandom((i * Math.PI * 2000) * count, 0, 4);
+          y = this.cardHeight * .5 * this.height / this.stackWidth + count * 20 + this.pseudoRandom((i * Math.PI * 2000) * count, 0, 4);
           y *= scale;
           r = this.pseudoRandom((i * Math.PI * 3000) * count, -10, 10);
           card = $('<div>').append($(this.cardTemplate(crystal)));
@@ -467,67 +475,7 @@ window.require.define({"models/game": function(exports, require, module) {
     }
 
     Game.prototype.defaults = {
-      tiles: [
-        {
-          positionX: 0,
-          positionY: 0,
-          player: {
-            name: "Hi",
-            color: "red"
-          }
-        }, {
-          positionX: 1,
-          positionY: 0
-        }, {
-          positionX: 2,
-          positionY: 0
-        }, {
-          positionX: 3,
-          positionY: 0
-        }, {
-          positionX: 0,
-          positionY: 1
-        }, {
-          positionX: 1,
-          positionY: 1
-        }, {
-          positionX: 2,
-          positionY: 1
-        }, {
-          positionX: 3,
-          positionY: 1,
-          hasCard: true
-        }, {
-          positionX: 0,
-          positionY: 2
-        }, {
-          positionX: 1,
-          positionY: 2
-        }, {
-          positionX: 2,
-          positionY: 2
-        }, {
-          positionX: 3,
-          positionY: 2,
-          player: {
-            name: "Yo",
-            color: "blue"
-          },
-          hasCard: true
-        }, {
-          positionX: 0,
-          positionY: 3
-        }, {
-          positionX: 1,
-          positionY: 3
-        }, {
-          positionX: 2,
-          positionY: 3
-        }, {
-          positionX: 3,
-          positionY: 3
-        }
-      ]
+      tiles: []
     };
 
     return Game;
@@ -537,7 +485,7 @@ window.require.define({"models/game": function(exports, require, module) {
 }});
 
 window.require.define({"models/hand": function(exports, require, module) {
-  var Crystal, Crystals, Spell, Weapon, cardTemplate, template,
+  var Crystal, Crystals, Spell, Weapon, cardHeight, cardTemplate, cardWidth, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -551,6 +499,10 @@ window.require.define({"models/hand": function(exports, require, module) {
   Weapon = require('models/weapon_card');
 
   Spell = require('models/spell_card');
+
+  cardWidth = 142;
+
+  cardHeight = 223;
 
   module.exports = Crystals = (function(_super) {
 
@@ -566,6 +518,10 @@ window.require.define({"models/hand": function(exports, require, module) {
     Crystals.prototype.template = template;
 
     Crystals.prototype.cardTemplate = cardTemplate;
+
+    Crystals.prototype.cardWidth = cardWidth;
+
+    Crystals.prototype.cardHeight = cardHeight;
 
     Crystals.prototype.defaults = {
       player: '',
@@ -646,20 +602,20 @@ window.require.define({"models/hand": function(exports, require, module) {
         $('.cards', this.div).append(card.div);
       }
       $('.playing-card', this.div).bind('click touchstart', this.onCardClick);
-      scale = this.isLandscape ? this.width / 200 * .7 : this.height / 300 * .8;
+      scale = this.isLandscape ? this.width / this.cardWidth * .7 : this.height / this.cardHeight * .8;
       count = 0;
       _ref1 = this.cards;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         card = _ref1[_j];
-        x = !this.isLandscape ? this.width / 2 / scale + (count - this.cards.length * .5) * 150 : this.width / 2 / scale;
+        x = !this.isLandscape ? this.width / 2 / scale + (count - this.cards.length * .5) * this.cardWidth * .7 : this.width / 2 / scale;
         x += this.pseudoRandom(count * Math.PI * 1000, 0, 10);
-        y = this.isLandscape ? this.height / 2 / scale + (1 + count - this.cards.length * .5) * 100 : this.height / 2 / scale;
+        y = this.isLandscape ? this.height / 2 / scale + (1 + count - this.cards.length * .5) * this.cardWidth * .5 : this.height / 2 / scale;
         y += this.pseudoRandom(count * Math.PI * 2000, 0, 10);
         r = this.pseudoRandom(count * Math.PI * 3000, -10, 10);
         cardScale = scale * 1;
         card.div.css({
           "transform-origin": "50% 50%",
-          transform: "translate3d(-100px, -150px, 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)"
+          transform: "translate3d(-" + (this.cardWidth / 2) + "px, -" + (this.cardHeight / 2) + ("px, 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)")
         });
         count++;
       }
@@ -1294,7 +1250,7 @@ window.require.define({"views/templates/intro": function(exports, require, modul
     var foundHelper, self=this;
 
 
-    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n</form>";});
+    return "<header>\n  <h1>Welcome to Yeticorn!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"play\">Play!</a>\n  </div>\n	<p>\n		Yeticorn is a mobile-friendly board game involving mythical yetis with unicorn horns who move, cast spells, and attack using energy from magic crystals. \n	</p>\n	<p>\n		The goal is to kill your opponents by reducing their life points to zero. \n	</p>\n	<p>\n		The game is played on a map where players move their yeticorn character on the board to collect cards and attack opponents.\n	</p> \n	<p>\n		Good Luck!\n	</p>\n	\n</form>";});
 }});
 
 window.require.define({"views/templates/player_setup": function(exports, require, module) {
