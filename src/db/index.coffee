@@ -11,4 +11,4 @@ exports.GameModel = @db.model 'Game', GameSchema
 exports.PlayerModel = @db.model 'Player', PlayerSchema
 exports.EventModel = @db.model 'Event', EventSchema
 exports.CardModel = @db.model 'Card', CardSchema
-exports.TileModel = @db.model 'Tile', TieSchema
+exports.TileModel = @db.model 'Tile', TileSchema
