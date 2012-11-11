@@ -45,15 +45,23 @@ module.exports = class ServerApp extends Backbone.Model
     @io.sockets.on 'connection', (socket) ->
       socket.emit 'intro.show'
       socket.on 'playerSetup.submit', (name, gameId) ->
+        gameSetup = (game) ->
+          player = new app.PlayerModel
+            name: name
+            game: game
+          game.players.push player
+          game.save (err) ->
+            unless err
+              socket.emit 'gameSetup.show', game
         console.log 'gameId', gameId
         if gameId
           app.GameModel.findOne(key: gameId).exec (err, game) ->
             if game and not err
-              socket.emit 'gameSetup.show', game.key
+              gameSetup game
         else
           game = new app.GameModel key: idgen()
           game.save (err) ->
             unless err
-              socket.emit 'gameSetup.show', game.key
+              gameSetup game
       socket.on 'gameSetup.submit', ->
         socket.emit 'game.show'

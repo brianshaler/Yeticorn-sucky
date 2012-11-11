@@ -120,8 +120,8 @@ window.require.define({"application": function(exports, require, module) {
         console.log('show');
         return _this.intro();
       });
-      return this.socket.on('gameSetup.show', function(gameId) {
-        _this.gameId = gameId;
+      return this.socket.on('gameSetup.show', function(gameData) {
+        _this.gameData = gameData;
         return _this.gameSetup();
       });
     };
@@ -159,7 +159,7 @@ window.require.define({"application": function(exports, require, module) {
 
     Application.prototype.gameSetup = function() {
       var _this = this;
-      window.location.hash = this.gameId;
+      window.location.hash = this.gameData.key;
       this.gameSetupView = new GameSetupView();
       this.gameSetupView.render();
       return this.gameSetupView.on('clickedStart', function() {
