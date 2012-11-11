@@ -149,7 +149,12 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.enteredName = function() {
-      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName());
+      var gameId;
+      gameId = null;
+      if (window.location.hash.toString().length > 1) {
+        gameId = window.location.hash.toString().substr(1);
+      }
+      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName(), gameId);
     };
 
     Application.prototype.gameSetup = function() {

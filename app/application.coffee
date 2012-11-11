@@ -44,7 +44,10 @@ module.exports = class Application extends Backbone.Model
       @enteredName()
 
   enteredName: ->
-    @socket.emit 'playerSetup.submit', @playerSetupView.getName()
+    gameId = null
+    if window.location.hash.toString().length > 1
+      gameId = window.location.hash.toString().substr(1)
+    @socket.emit 'playerSetup.submit', @playerSetupView.getName(), gameId
 
   gameSetup: ->
     window.location.hash = @gameId
