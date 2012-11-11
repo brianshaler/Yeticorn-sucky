@@ -1,5 +1,6 @@
 template = require 'views/templates/game'
 Tile = require 'models/tile'
+Crystals = require 'models/crystals'
 
 module.exports = class GameView extends Backbone.View
   template: template
@@ -52,12 +53,16 @@ module.exports = class GameView extends Backbone.View
         tile.createHitarea @hitareas
         tile.on 'selectedTile', (selectedTile) =>
           @selectTile selectedTile
+          @crystals.incrementAll()
           #@resetPlayers()
         
         tile.render()
         $('.game-map').append tile.div
     else
       console.log 'Something really bad happened..'
+    
+    @crystals = new Crystals()
+    @crystals.update 'div', $('.crystals-holder')
     
     event = document.createEvent 'Event'
     event.initEvent 'viewportchanged', true, true
@@ -114,8 +119,11 @@ module.exports = class GameView extends Backbone.View
     $('svg', $('#map-overlay')).width(fullMapWidth).height(fullMapHeight).attr width: fullMapWidth+"px", height: fullMapHeight+"px"
 
   renderCrystals: () ->
-    top = @viewportHeight - @crystalsHeight
-    $('.crystals-holder').height(@crystalsHeight).css(top: "#{top}px")
+    @crystals.update
+      width: @viewportWidth-@handWidth
+      height: @crystalsHeight
+      top: @viewportHeight-@crystalsHeight
+    @crystals.render()
 
   renderHand: () ->
     left = @viewportWidth - @handWidth

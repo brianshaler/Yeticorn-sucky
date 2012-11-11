@@ -200,6 +200,7 @@ window.require.define({"initialize": function(exports, require, module) {
 
 window.require.define({"models/crystals": function(exports, require, module) {
   var Crystals, template,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -210,17 +211,33 @@ window.require.define({"models/crystals": function(exports, require, module) {
     __extends(Crystals, _super);
 
     function Crystals() {
+      this.render = __bind(this.render, this);
       return Crystals.__super__.constructor.apply(this, arguments);
     }
 
     Crystals.prototype.template = template;
 
     Crystals.prototype.defaults = {
-      crystals: []
+      crystals: [
+        [
+          {
+            _id: "asdf1"
+          }, {
+            _id: "asdf2"
+          }
+        ], [], [], [], [
+          {
+            _id: "asdf2"
+          }
+        ], []
+      ]
     };
 
     Crystals.prototype.initialize = function() {
-      return this.div = $('<div>');
+      this.div = $('<div>');
+      this.width = 1;
+      this.height = 1;
+      return this.crystals = this.attributes.crystals;
     };
 
     Crystals.prototype.update = function(prop, val) {
@@ -241,8 +258,34 @@ window.require.define({"models/crystals": function(exports, require, module) {
       return this.render();
     };
 
+    Crystals.prototype.incrementAll = function() {
+      var crystal, stack, _i, _j, _len, _ref, _ref1;
+      for (stack = _i = _ref = this.crystals.length - 2; _ref <= 0 ? _i <= 0 : _i >= 0; stack = _ref <= 0 ? ++_i : --_i) {
+        _ref1 = this.crystals[stack];
+        for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+          crystal = _ref1[_j];
+          this.crystals[stack + 1].push(crystal);
+        }
+        this.crystals[stack] = [];
+      }
+      return this.render();
+    };
+
     Crystals.prototype.render = function() {
-      return this.div.html(this.template(this));
+      this.crystals0 = this.crystals[0].length;
+      this.crystals1 = this.crystals[1].length;
+      this.crystals2 = this.crystals[2].length;
+      this.crystals3 = this.crystals[3].length;
+      this.crystals4 = this.crystals[4].length;
+      this.crystals5 = this.crystals[5].length;
+      this.div.html(this.template(this));
+      this.div.height(this.height).css({
+        top: "" + this.top + "px"
+      });
+      return $('.crystals-stack', this.div).css({
+        width: Math.floor(this.width / 6 - 2) + "px",
+        height: "" + this.height + "px"
+      });
     };
 
     return Crystals;
@@ -462,7 +505,7 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
 }});
 
 window.require.define({"views/game_view": function(exports, require, module) {
-  var GameView, Tile, template,
+  var Crystals, GameView, Tile, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -470,6 +513,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
   template = require('views/templates/game');
 
   Tile = require('models/tile');
+
+  Crystals = require('models/crystals');
 
   module.exports = GameView = (function(_super) {
 
@@ -543,7 +588,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
           tile = _ref3[_i];
           tile.createHitarea(this.hitareas);
           tile.on('selectedTile', function(selectedTile) {
-            return _this.selectTile(selectedTile);
+            _this.selectTile(selectedTile);
+            return _this.crystals.incrementAll();
           });
           tile.render();
           $('.game-map').append(tile.div);
@@ -551,6 +597,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
       } else {
         console.log('Something really bad happened..');
       }
+      this.crystals = new Crystals();
+      this.crystals.update('div', $('.crystals-holder'));
       event = document.createEvent('Event');
       event.initEvent('viewportchanged', true, true);
       event.width = window.viewportWidth;
@@ -607,11 +655,12 @@ window.require.define({"views/game_view": function(exports, require, module) {
     };
 
     GameView.prototype.renderCrystals = function() {
-      var top;
-      top = this.viewportHeight - this.crystalsHeight;
-      return $('.crystals-holder').height(this.crystalsHeight).css({
-        top: "" + top + "px"
+      this.crystals.update({
+        width: this.viewportWidth - this.handWidth,
+        height: this.crystalsHeight,
+        top: this.viewportHeight - this.crystalsHeight
       });
+      return this.crystals.render();
     };
 
     GameView.prototype.renderHand = function() {
@@ -751,6 +800,46 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
 
   })(Backbone.View);
   
+}});
+
+window.require.define({"views/templates/crystals": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var buffer = "", stack1, foundHelper, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
+
+
+    buffer += "<div class=\"crystals-stack crystals-stack-0\">\n  <div class=\"label\">0pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals0;
+    stack1 = foundHelper || depth0.crystals0;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals0", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-1\">\n  <div class=\"label\">1pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals1;
+    stack1 = foundHelper || depth0.crystals1;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals1", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-2\">\n  <div class=\"label\">2pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals2;
+    stack1 = foundHelper || depth0.crystals2;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals2", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-3\">\n  <div class=\"label\">3pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals3;
+    stack1 = foundHelper || depth0.crystals3;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals3", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-4\">\n  <div class=\"label\">4pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals4;
+    stack1 = foundHelper || depth0.crystals4;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals4", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n<div class=\"crystals-stack crystals-stack-5\">\n  <div class=\"label\">5pt</div>\n  <div class=\"card-count\">";
+    foundHelper = helpers.crystals5;
+    stack1 = foundHelper || depth0.crystals5;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "crystals5", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "x</div>\n</div>\n";
+    return buffer;});
 }});
 
 window.require.define({"views/templates/game": function(exports, require, module) {

@@ -675,6 +675,18 @@ h1 {
   width: 100%;
   background-color: #77a;
 }
+.game-page .crystals-holder .crystals-stack {
+  float: left;
+  background-color: #006599;
+  margin: 0px 1px 0px 1px;
+}
+.game-page .crystals-holder .crystals-stack .label {
+  color: #fff;
+}
+.game-page .crystals-holder .crystals-stack .card-count {
+  color: #fff;
+  font-size: 150%;
+}
 .game-page .hand-holder {
   position: absolute;
   top: 0px;
