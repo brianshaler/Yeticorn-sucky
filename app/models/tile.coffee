@@ -1,7 +1,6 @@
-template = require 'views/templates/tile'
+Backbone = require './backbone'
 
 module.exports = class Tile extends Backbone.Model
-  template: template
   defaults:
     positionX: 0
     positionY: 0
@@ -38,6 +37,8 @@ module.exports = class Tile extends Backbone.Model
     @render()
 
   render: () ->
+    @template or= require 'views/templates/tile'
+
     if @hitarea?
       x = @attributes.positionX * (@tileWidth * .75)
       y = (@attributes.positionY + (if @attributes.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight

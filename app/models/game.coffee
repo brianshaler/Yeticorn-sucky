@@ -1,3 +1,6 @@
+Backbone = require './backbone'
+Tile = require './tile'
+
 module.exports = class Game extends Backbone.Model
   defaults:
     gameId: ''

@@ -15,7 +15,9 @@ runCoffee = (args, callback) ->
 task 'build', 'Build lib/ from src/', ->
   runCoffee ['-c', '-o', 'lib', 'src']
   runCoffee ['-c', '-o', 'lib/db', 'src/db']
+  runCoffee ['-c', '-o', 'lib/models', 'app/models']
 
 task 'watch', 'Build lib/ from src/ and watch', ->
   runCoffee ['-w', '-c', '-o', 'lib', 'src']
   runCoffee ['-w', '-c', '-o', 'lib/db', 'src/db']
+  runCoffee ['-w', '-c', '-o', 'lib/models', 'app/models']

@@ -207,6 +207,16 @@ window.require.define({"initialize": function(exports, require, module) {
   
 }});
 
+window.require.define({"models/backbone": function(exports, require, module) {
+  
+  if (typeof window !== "undefined" && window !== null) {
+    module.exports = window.Backbone;
+  } else {
+    module.exports = require('backbone');
+  }
+  
+}});
+
 window.require.define({"models/card": function(exports, require, module) {
   var Card, template,
     __hasProp = {}.hasOwnProperty,
@@ -471,9 +481,13 @@ window.require.define({"models/crystals": function(exports, require, module) {
 }});
 
 window.require.define({"models/game": function(exports, require, module) {
-  var Game,
+  var Backbone, Game, Tile,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Backbone = require('./backbone');
+
+  Tile = require('./tile');
 
   module.exports = Game = (function(_super) {
 
@@ -675,11 +689,11 @@ window.require.define({"models/spell_card": function(exports, require, module) {
 }});
 
 window.require.define({"models/tile": function(exports, require, module) {
-  var Tile, template,
+  var Backbone, Tile,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  template = require('views/templates/tile');
+  Backbone = require('./backbone');
 
   module.exports = Tile = (function(_super) {
 
@@ -688,8 +702,6 @@ window.require.define({"models/tile": function(exports, require, module) {
     function Tile() {
       return Tile.__super__.constructor.apply(this, arguments);
     }
-
-    Tile.prototype.template = template;
 
     Tile.prototype.defaults = {
       positionX: 0,
@@ -738,6 +750,7 @@ window.require.define({"models/tile": function(exports, require, module) {
 
     Tile.prototype.render = function() {
       var x, x0, x1, x2, x3, y, y0, y1, y2;
+      this.template || (this.template = require('views/templates/tile'));
       if (this.hitarea != null) {
         x = this.attributes.positionX * (this.tileWidth * .75);
         y = (this.attributes.positionY + (this.attributes.positionX % 2 === 0 ? 0.5 : 0)) * this.tileHeight;
@@ -761,6 +774,16 @@ window.require.define({"models/tile": function(exports, require, module) {
     return Tile;
 
   })(Backbone.Model);
+  
+}});
+
+window.require.define({"models/underscore": function(exports, require, module) {
+  
+  if (typeof window !== "undefined" && window !== null) {
+    module.exports = window._;
+  } else {
+    module.exports = require('underscore');
+  }
   
 }});
 
