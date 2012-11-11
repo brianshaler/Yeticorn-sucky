@@ -2,9 +2,16 @@ template = require 'views/templates/crystals'
 cardTemplate = require 'views/templates/card'
 Crystal = require 'models/crystal_card'
 
+cardWidth = 142
+cardHeight = 223
+
 module.exports = class Crystals extends Backbone.Model
   template: template
   cardTemplate: cardTemplate
+  
+  cardWidth: cardWidth
+  cardHeight: cardHeight
+  
   defaults:
     player: ''
     crystals: [[], [], [], [], [], []]
@@ -91,7 +98,7 @@ module.exports = class Crystals extends Backbone.Model
     # if there are already events, cleanup
     $('.crystals-stack', @div).unbind()
     
-    unscaledWidth = 800
+    unscaledWidth = 700
     @stackWidth = Math.floor @width/6
     scale = @width / (unscaledWidth*6)
     
@@ -110,9 +117,9 @@ module.exports = class Crystals extends Backbone.Model
       stack = $ ".cards", slot
       count = 0
       for crystal in @crystals[i]
-        x = @stackWidth / 2 / scale - 120 + @pseudoRandom (i*Math.PI*1000)*count, -10, 10
+        x = @stackWidth / 2 / scale - @cardWidth*.5 + @pseudoRandom (i*Math.PI*1000)*count, -10, 10
         x *= scale
-        y = 100*@height/@stackWidth + count*20 + @pseudoRandom (i*Math.PI*2000)*count, 0, 4
+        y = @cardHeight*.5 * @height/@stackWidth + count*20 + @pseudoRandom (i*Math.PI*2000)*count, 0, 4
         y *= scale
         r = @pseudoRandom (i*Math.PI*3000)*count, -10, 10
         card = $('<div>').append $ @cardTemplate crystal
