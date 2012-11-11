@@ -120,8 +120,8 @@ window.require.define({"application": function(exports, require, module) {
         console.log('show');
         return _this.intro();
       });
-      return this.socket.on('gameSetup.show', function(gameId) {
-        _this.gameId = gameId;
+      return this.socket.on('gameSetup.show', function(gameData) {
+        _this.gameData = gameData;
         return _this.gameSetup();
       });
     };
@@ -149,12 +149,17 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.enteredName = function() {
-      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName());
+      var gameId;
+      gameId = null;
+      if (window.location.hash.toString().length > 1) {
+        gameId = window.location.hash.toString().substr(1);
+      }
+      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName(), gameId);
     };
 
     Application.prototype.gameSetup = function() {
       var _this = this;
-      window.location.hash = this.gameId;
+      window.location.hash = this.gameData.key;
       this.gameSetupView = new GameSetupView();
       this.gameSetupView.render();
       return this.gameSetupView.on('clickedStart', function() {
