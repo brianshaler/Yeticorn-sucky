@@ -63,6 +63,7 @@ module.exports = class GameView extends Backbone.View
     event.initEvent 'viewportchanged', true, true
     event.width = window.viewportWidth
     event.height = window.viewportHeight
+    event.isLandscape = true
     window.dispatchEvent event
 
   resizeWindow: (e) =>
@@ -72,8 +73,8 @@ module.exports = class GameView extends Backbone.View
     @viewportWidth = event.width - 1
     @viewportHeight = event.height - 1
     
-    @mapWidth = if isPlayer then Math.round(@viewportWidth * .9) else @viewportWidth
-    @mapHeight = if isPlayer then Math.round(@viewportHeight * .9) else @viewportHeight
+    @mapWidth = if isPlayer then Math.round(@viewportWidth * .79) else @viewportWidth
+    @mapHeight = if isPlayer then Math.round(@viewportHeight * .81) else @viewportHeight
     
     @handWidth = @viewportWidth - @mapWidth
     @crystalsHeight = @viewportHeight - @mapHeight

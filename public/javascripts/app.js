@@ -555,6 +555,7 @@ window.require.define({"views/game_view": function(exports, require, module) {
       event.initEvent('viewportchanged', true, true);
       event.width = window.viewportWidth;
       event.height = window.viewportHeight;
+      event.isLandscape = true;
       return window.dispatchEvent(event);
     };
 
@@ -564,8 +565,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
       isPlayer = true;
       this.viewportWidth = event.width - 1;
       this.viewportHeight = event.height - 1;
-      this.mapWidth = isPlayer ? Math.round(this.viewportWidth * .9) : this.viewportWidth;
-      this.mapHeight = isPlayer ? Math.round(this.viewportHeight * .9) : this.viewportHeight;
+      this.mapWidth = isPlayer ? Math.round(this.viewportWidth * .79) : this.viewportWidth;
+      this.mapHeight = isPlayer ? Math.round(this.viewportHeight * .81) : this.viewportHeight;
       this.handWidth = this.viewportWidth - this.mapWidth;
       this.crystalsHeight = this.viewportHeight - this.mapHeight;
       this.renderMap();
