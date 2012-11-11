@@ -220,6 +220,9 @@ window.require.define({"models/card": function(exports, require, module) {
     };
 
     Card.prototype.render = function() {
+      if (!(this.div != null)) {
+        this.div = $('<div>');
+      }
       return this.div.html(this.template(this));
     };
 
@@ -245,7 +248,8 @@ window.require.define({"models/crystal_card": function(exports, require, module)
     }
 
     Crystal.prototype.initialize = function() {
-      return this.type = 'crystal';
+      this.type = 'crystal';
+      return this.energy = 0;
     };
 
     return Crystal;
@@ -284,11 +288,16 @@ window.require.define({"models/crystals": function(exports, require, module) {
     Crystals.prototype.defaults = {
       player: '',
       crystals: [[], [], [], [], [], []],
-      lastRender: [-1, 0, 0, 0, 0, 0]
+      lastRender: [-1, 0, 0, 0, 0, 0],
+      left: 0,
+      right: 0,
+      top: 0,
+      width: 1,
+      height: 1
     };
 
     Crystals.prototype.initialize = function() {
-      var prop, val, _ref;
+      var crystal, i, prop, val, _i, _ref, _ref1, _results;
       this.div = $('<div>');
       this.width = 1;
       this.height = 1;
@@ -311,7 +320,21 @@ window.require.define({"models/crystals": function(exports, require, module) {
       this.crystals[4].push(new Crystal());
       this.crystals[4].push(new Crystal());
       this.crystals[4].push(new Crystal());
-      return this.crystals[5].push(new Crystal());
+      this.crystals[5].push(new Crystal());
+      _results = [];
+      for (i = _i = 0, _ref1 = this.crystals.length - 1; 0 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+        _results.push((function() {
+          var _j, _len, _ref2, _results1;
+          _ref2 = this.crystals[i];
+          _results1 = [];
+          for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
+            crystal = _ref2[_j];
+            _results1.push(crystal.energy = i);
+          }
+          return _results1;
+        }).call(this));
+      }
+      return _results;
     };
 
     Crystals.prototype.update = function(prop, val) {
@@ -346,15 +369,17 @@ window.require.define({"models/crystals": function(exports, require, module) {
     };
 
     Crystals.prototype.onStackClick = function(e) {
-      var crystal, energy, _ref;
-      energy = parseInt($(e.target).attr('data-energy'));
-      if (energy > 0 && ((_ref = this.crystals[energy]) != null ? _ref.length : void 0) > 0) {
-        crystal = this.crystals[energy][this.crystals[energy].length(-1)];
+      var crystal, energy;
+      energy = parseInt($(e.currentTarget).attr('data-energy'));
+      if (energy > 0 && this.crystals[energy].length > 0) {
+        crystal = this.crystals[energy][this.crystals[energy].length - 1];
         return this.spendCrystal(crystal);
       }
     };
 
-    Crystals.prototype.spendCrystal = function(crystal) {};
+    Crystals.prototype.spendCrystal = function(crystal) {
+      return console.log("Spending a crystal! " + crystal.energy);
+    };
 
     Crystals.prototype.render = function(force) {
       var card, cardScale, count, crystal, i, r, scale, slot, stack, stacks, thisRender, unchanged, unscaledWidth, x, y, _i, _j, _k, _len, _ref, _ref1, _ref2;
@@ -373,9 +398,9 @@ window.require.define({"models/crystals": function(exports, require, module) {
       if (unchanged && !force && 1 === 2) {
         return this;
       }
+      $('.crystals-stack', this.div).unbind();
       unscaledWidth = 800;
       this.stackWidth = Math.floor(this.width / 6);
-      console.log("Scale: " + unscaledWidth + "/" + this.stackWidth);
       scale = this.width / (unscaledWidth * 6);
       this.div.html(this.template(this));
       this.div.height(this.height).css({
@@ -391,7 +416,6 @@ window.require.define({"models/crystals": function(exports, require, module) {
           left: i * this.stackWidth + "px"
         });
         stack = $(".cards", slot);
-        console.log(stack);
         count = 0;
         _ref2 = this.crystals[i];
         for (_k = 0, _len = _ref2.length; _k < _len; _k++) {
@@ -507,6 +531,149 @@ window.require.define({"models/game": function(exports, require, module) {
     };
 
     return Game;
+
+  })(Backbone.Model);
+  
+}});
+
+window.require.define({"models/hand": function(exports, require, module) {
+  var Crystal, Crystals, Spell, Weapon, cardTemplate, template,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/hand');
+
+  cardTemplate = require('views/templates/card');
+
+  Crystal = require('models/crystal_card');
+
+  Weapon = require('models/weapon_card');
+
+  Spell = require('models/spell_card');
+
+  module.exports = Crystals = (function(_super) {
+
+    __extends(Crystals, _super);
+
+    function Crystals() {
+      this.render = __bind(this.render, this);
+
+      this.onCardClick = __bind(this.onCardClick, this);
+      return Crystals.__super__.constructor.apply(this, arguments);
+    }
+
+    Crystals.prototype.template = template;
+
+    Crystals.prototype.cardTemplate = cardTemplate;
+
+    Crystals.prototype.defaults = {
+      player: '',
+      cards: [],
+      cached: false,
+      left: 0,
+      right: 0,
+      top: 0,
+      width: 1,
+      height: 1,
+      isLandscape: true
+    };
+
+    Crystals.prototype.initialize = function() {
+      var prop, val, _ref;
+      this.div = $('<div>');
+      this.width = 1;
+      this.height = 1;
+      _ref = this.attributes;
+      for (prop in _ref) {
+        val = _ref[prop];
+        this[prop] = val;
+      }
+      this.cards.push(new Crystal());
+      this.cards.push(new Crystal());
+      this.cards.push(new Weapon());
+      this.cards.push(new Spell());
+      this.cards.push(new Crystal());
+      this.cards.push(new Weapon());
+      return this.cached = false;
+    };
+
+    Crystals.prototype.update = function(prop, val) {
+      var props;
+      if (typeof prop === 'object') {
+        props = prop;
+      } else {
+        props = {};
+        props[prop] = val;
+      }
+      for (prop in props) {
+        val = props[prop];
+        if ((prop != null) && this.attributes.hasOwnProperty(prop)) {
+          this.attributes[prop] = val;
+        }
+        this[prop] = val;
+      }
+      this.cached = false;
+      return this.render();
+    };
+
+    Crystals.prototype.onCardClick = function(e) {
+      var card;
+      card = $(e.currentTarget).data('card');
+      return console.log("Clicked card in hand: " + card.type);
+    };
+
+    Crystals.prototype.render = function(force) {
+      var card, cardScale, count, r, scale, x, y, _i, _j, _len, _len1, _ref, _ref1;
+      if (force == null) {
+        force = false;
+      }
+      if (this.cached && !force) {
+        return this;
+      }
+      $('.playing-card', this.div).unbind();
+      this.div.html(this.template(this));
+      this.div.width(this.width).height(this.height).css({
+        left: "" + this.left + "px"
+      });
+      _ref = this.cards;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        card = _ref[_i];
+        if (!card.div) {
+          card.div = $(this.cardTemplate(card));
+        }
+        card.div.data('card', card);
+        $('.cards', this.div).append(card.div);
+      }
+      $('.playing-card', this.div).bind('click touchstart', this.onCardClick);
+      scale = this.isLandscape ? this.width / 200 * .7 : this.height / 300 * .8;
+      count = 0;
+      _ref1 = this.cards;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        card = _ref1[_j];
+        x = !this.isLandscape ? this.width / 2 / scale + (count - this.cards.length * .5) * 150 : this.width / 2 / scale;
+        x += this.pseudoRandom(count * Math.PI * 1000, 0, 10);
+        y = this.isLandscape ? this.height / 2 / scale + (1 + count - this.cards.length * .5) * 100 : this.height / 2 / scale;
+        y += this.pseudoRandom(count * Math.PI * 2000, 0, 10);
+        r = this.pseudoRandom(count * Math.PI * 3000, -10, 10);
+        cardScale = scale * 1;
+        card.div.css({
+          "transform-origin": "50% 50%",
+          transform: "translate3d(-100px, -150px, 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)"
+        });
+        count++;
+      }
+      return this.cached = true;
+    };
+
+    Crystals.prototype.pseudoRandom = function(seed, min, max) {
+      var r;
+      r = seed * Math.PI * 1000000;
+      r = r - Math.floor(r);
+      return (max - min) * r + min;
+    };
+
+    return Crystals;
 
   })(Backbone.Model);
   
@@ -694,7 +861,7 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
 }});
 
 window.require.define({"views/game_view": function(exports, require, module) {
-  var Crystals, GameView, Tile, template,
+  var Crystals, GameView, Hand, Tile, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -704,6 +871,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
   Tile = require('models/tile');
 
   Crystals = require('models/crystals');
+
+  Hand = require('models/hand');
 
   module.exports = GameView = (function(_super) {
 
@@ -788,6 +957,8 @@ window.require.define({"views/game_view": function(exports, require, module) {
       }
       this.crystals = new Crystals();
       this.crystals.update('div', $('.crystals-holder'));
+      this.hand = new Hand();
+      this.hand.update('div', $('.hand-holder'));
       event = document.createEvent('Event');
       event.initEvent('viewportchanged', true, true);
       event.width = window.viewportWidth;
@@ -870,11 +1041,13 @@ window.require.define({"views/game_view": function(exports, require, module) {
     };
 
     GameView.prototype.renderHand = function() {
-      var left;
-      left = this.viewportWidth - this.handWidth;
-      return $('.hand-holder').width(this.handWidth).height(this.handHeight).css({
-        left: "" + left + "px"
+      this.hand.update({
+        width: this.handWidth,
+        height: this.handHeight,
+        left: this.viewportWidth - this.handWidth,
+        isLandscape: this.isLandscape
       });
+      return this.hand.render();
     };
 
     GameView.prototype.resetPlayers = function() {
@@ -1014,7 +1187,7 @@ window.require.define({"views/templates/card": function(exports, require, module
     var buffer = "", stack1, foundHelper, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
 
 
-    buffer += "<div class=\"playing-card\">\n  <h2>Card:</h2>\n  <h1>";
+    buffer += "<div class=\"playing-card\">\n  <h1>";
     foundHelper = helpers.type;
     stack1 = foundHelper || depth0.type;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
@@ -1079,6 +1252,15 @@ window.require.define({"views/templates/game_setup": function(exports, require, 
 
 
     return "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";});
+}});
+
+window.require.define({"views/templates/hand": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var foundHelper, self=this;
+
+
+    return "<div class=\"hand\">\n  <div class=\"cards\"></div>\n</div>";});
 }});
 
 window.require.define({"views/templates/intro": function(exports, require, module) {

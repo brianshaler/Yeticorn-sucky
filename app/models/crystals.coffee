@@ -9,6 +9,11 @@ module.exports = class Crystals extends Backbone.Model
     player: ''
     crystals: [[], [], [], [], [], []]
     lastRender: [-1, 0, 0, 0, 0, 0]
+    left: 0
+    right: 0
+    top: 0
+    width: 1
+    height: 1
 
   initialize: ->
     @div = $ '<div>'
@@ -33,6 +38,11 @@ module.exports = class Crystals extends Backbone.Model
     @crystals[4].push new Crystal()
     @crystals[4].push new Crystal()
     @crystals[5].push new Crystal()
+    
+    for i in [0..@crystals.length-1]
+      for crystal in @crystals[i]
+        crystal.energy = i
+    
 
   update: (prop, val) ->
     if typeof prop == 'object'
@@ -57,13 +67,13 @@ module.exports = class Crystals extends Backbone.Model
     @render()
 
   onStackClick: (e) =>
-    energy = parseInt $(e.target).attr 'data-energy'
-    if energy > 0 and @crystals[energy]?.length > 0
-      crystal = @crystals[energy][@crystals[energy].length -1]
+    energy = parseInt($(e.currentTarget).attr 'data-energy')
+    if energy > 0 and @crystals[energy].length > 0
+      crystal = @crystals[energy][@crystals[energy].length-1]
       @spendCrystal crystal
 
   spendCrystal: (crystal) ->
-    
+    console.log "Spending a crystal! #{crystal.energy}"
 
   render: (force = false) =>
     unchanged = true
@@ -79,11 +89,10 @@ module.exports = class Crystals extends Backbone.Model
       return @
     
     # if there are already events, cleanup
-    #$('.crystals-stack', @div).unbind()
+    $('.crystals-stack', @div).unbind()
     
     unscaledWidth = 800
     @stackWidth = Math.floor @width/6
-    console.log "Scale: #{unscaledWidth}/#{@stackWidth}"
     scale = @width / (unscaledWidth*6)
     
     @div.html(@template(@))
@@ -99,7 +108,6 @@ module.exports = class Crystals extends Backbone.Model
       slot.css
         left: i*@stackWidth + "px"
       stack = $ ".cards", slot
-      console.log stack
       count = 0
       for crystal in @crystals[i]
         x = @stackWidth / 2 / scale - 120 + @pseudoRandom (i*Math.PI*1000)*count, -10, 10

@@ -1,6 +1,7 @@
 template = require 'views/templates/game'
 Tile = require 'models/tile'
 Crystals = require 'models/crystals'
+Hand = require 'models/hand'
 
 module.exports = class GameView extends Backbone.View
   template: template
@@ -63,6 +64,9 @@ module.exports = class GameView extends Backbone.View
     
     @crystals = new Crystals()
     @crystals.update 'div', $('.crystals-holder')
+    
+    @hand = new Hand()
+    @hand.update 'div', $('.hand-holder')
     
     event = document.createEvent 'Event'
     event.initEvent 'viewportchanged', true, true
@@ -143,8 +147,12 @@ module.exports = class GameView extends Backbone.View
     @crystals.render()
 
   renderHand: () ->
-    left = @viewportWidth - @handWidth
-    $('.hand-holder').width(@handWidth).height(@handHeight).css(left: "#{left}px")
+    @hand.update
+      width: @handWidth
+      height: @handHeight
+      left: @viewportWidth - @handWidth
+      isLandscape: @isLandscape
+    @hand.render()
 
   resetPlayers: () =>
     players = ['blue', 'gray', 'orange', 'yellow']
