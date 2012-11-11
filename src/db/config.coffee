@@ -1,1 +1,1 @@
-exports.url = 'mongodb://localhost/yeticorn'
+exports.url = 'mongodb://appcorn:YeTi938215-32156@ds029817.mongolab.com:29817/yeticorn'
