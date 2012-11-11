@@ -41,6 +41,7 @@ module.exports = class ServerApp extends Backbone.Model
     @GameModel = db.GameModel
     @PlayerModel = db.PlayerModel
     @EventModel = db.EventModel
+    @CardModel = db.CardModel
     @eventStream = @EventModel.find().limit(10).tailable().populate('game').stream()
     @eventStream.on 'error', (err) ->
       console.error err
