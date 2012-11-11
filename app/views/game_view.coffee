@@ -68,26 +68,41 @@ module.exports = class GameView extends Backbone.View
     event.initEvent 'viewportchanged', true, true
     event.width = window.viewportWidth
     event.height = window.viewportHeight
-    event.isLandscape = true
+    event.isLandscape = window.innerWidth > window.innerHeight
     window.dispatchEvent event
 
   resizeWindow: (e) =>
     event = e.originalEvent
     isPlayer = true
     
-    @viewportWidth = event.width - 1
+    if @viewportWidth == event.width and @viewportHeight == event.height
+      return @
+    
+    @viewportWidth = event.width
     @viewportHeight = event.height - 1
+    @isLandscape = event.isLandscape
     
-    @mapWidth = if isPlayer then Math.round(@viewportWidth * .79) else @viewportWidth
-    @mapHeight = if isPlayer then Math.round(@viewportHeight * .81) else @viewportHeight
+    horizontalSize = .79
+    verticalSize = .81
     
-    @handWidth = @viewportWidth - @mapWidth
-    @crystalsHeight = @viewportHeight - @mapHeight
+    if !@isLandscape
+      verticalSize *= verticalSize
+    
+    @mapWidth = if isPlayer and @isLandscape then Math.round(@viewportWidth * horizontalSize) else @viewportWidth
+    @mapHeight = if isPlayer then Math.round(@viewportHeight * verticalSize) else @viewportHeight
+    
+    @handWidth = if @isLandscape then @viewportWidth - @mapWidth else @viewportWidth
+    @handHeight = if @isLandscape then @viewportHeight else (@viewportHeight - @mapHeight)/2
+    @crystalsWidth = @viewportWidth - (if @isLandscape then @handWidth else 0)
+    @crystalsHeight = (@viewportHeight - @mapHeight) * (if @isLandscape then 1 else .5)
+    
+    if !isPlayer
+      @handWidth = @handHeight = @crystalsWidth = @crystalsHeight = 0
     
     @renderMap()
     
     if isPlayer
-      @renderCrystals()
+      @renderCrystals(true)
       @renderHand()
       #@renderWeapons()
     else
@@ -103,6 +118,8 @@ module.exports = class GameView extends Backbone.View
     scale = if scaleX < scaleY then scaleX else scaleY
     offsetX = Math.ceil (@mapWidth - fullMapWidth*scale) / 2
     offsetY = Math.ceil (@mapHeight - fullMapHeight*scale) / 2
+    if !@isLandscape
+      offsetY += @handHeight
     transform = "scale(" + scale + ")"
     $('.game-board').css(
       '-webkit-transform': transform
@@ -120,14 +137,14 @@ module.exports = class GameView extends Backbone.View
 
   renderCrystals: () ->
     @crystals.update
-      width: @viewportWidth-@handWidth
+      width: @crystalsWidth
       height: @crystalsHeight
       top: @viewportHeight-@crystalsHeight
     @crystals.render()
 
   renderHand: () ->
     left = @viewportWidth - @handWidth
-    $('.hand-holder').width(@handWidth).height(@viewportHeight).css(left: "#{left}px")
+    $('.hand-holder').width(@handWidth).height(@handHeight).css(left: "#{left}px")
 
   resetPlayers: () =>
     players = ['blue', 'gray', 'orange', 'yellow']

@@ -1,16 +1,38 @@
 template = require 'views/templates/crystals'
+cardTemplate = require 'views/templates/card'
+Crystal = require 'models/crystal_card'
 
 module.exports = class Crystals extends Backbone.Model
   template: template
+  cardTemplate: cardTemplate
   defaults:
-    crystals: [[{_id: "asdf1"}, {_id: "asdf2"}], [], [], [], [{_id: "asdf2"}], []]
+    player: ''
+    crystals: [[], [], [], [], [], []]
+    lastRender: [-1, 0, 0, 0, 0, 0]
 
   initialize: ->
     @div = $ '<div>'
     @width = 1
     @height = 1
     
-    @crystals = @attributes.crystals
+    for prop, val of @attributes
+      @[prop] = val
+    
+    @crystals[0].push new Crystal()
+    @crystals[0].push new Crystal()
+    @crystals[0].push new Crystal()
+    @crystals[2].push new Crystal()
+    @crystals[2].push new Crystal()
+    @crystals[2].push new Crystal()
+    @crystals[3].push new Crystal()
+    @crystals[3].push new Crystal()
+    @crystals[3].push new Crystal()
+    @crystals[3].push new Crystal()
+    @crystals[3].push new Crystal()
+    @crystals[4].push new Crystal()
+    @crystals[4].push new Crystal()
+    @crystals[4].push new Crystal()
+    @crystals[5].push new Crystal()
 
   update: (prop, val) ->
     if typeof prop == 'object'
@@ -25,8 +47,8 @@ module.exports = class Crystals extends Backbone.Model
       @[prop] = val
     
     @render()
-  
-  incrementAll: () ->
+
+  incrementAll: ->
     for stack in [@crystals.length-2..0]
       for crystal in @crystals[stack]
         @crystals[stack+1].push crystal
@@ -34,17 +56,72 @@ module.exports = class Crystals extends Backbone.Model
     
     @render()
 
-  render: () =>
-    @crystals0 = @crystals[0].length
-    @crystals1 = @crystals[1].length
-    @crystals2 = @crystals[2].length
-    @crystals3 = @crystals[3].length
-    @crystals4 = @crystals[4].length
-    @crystals5 = @crystals[5].length
+  onStackClick: (e) =>
+    energy = parseInt $(e.target).attr 'data-energy'
+    if energy > 0 and @crystals[energy]?.length > 0
+      crystal = @crystals[energy][@crystals[energy].length -1]
+      @spendCrystal crystal
+
+  spendCrystal: (crystal) ->
+    
+
+  render: (force = false) =>
+    unchanged = true
+    thisRender = []
+    
+    for i in [0..@crystals.length-1]
+      @["crystals#{i}"] = @crystals[i].length
+      if @crystals[i].length != @lastRender[i]
+        unchanged = false
+      thisRender[i] = @crystals[i].length
+    
+    if unchanged and !force and 1==2
+      return @
+    
+    # if there are already events, cleanup
+    #$('.crystals-stack', @div).unbind()
+    
+    unscaledWidth = 800
+    @stackWidth = Math.floor @width/6
+    console.log "Scale: #{unscaledWidth}/#{@stackWidth}"
+    scale = @width / (unscaledWidth*6)
     
     @div.html(@template(@))
     @div.height(@height).css
       top: "#{@top}px"
-    $('.crystals-stack', @div).css
-      width: Math.floor(@width/6 - 2)+"px"
+    stacks = $('.crystals-stack', @div).css(
+      width: "#{@stackWidth}px"
       height: "#{@height}px"
+    ).bind('click touchstart', @onStackClick)
+    
+    for i in [0..@crystals.length-1]
+      slot = $ ".crystals-stack-#{i}", @div
+      slot.css
+        left: i*@stackWidth + "px"
+      stack = $ ".cards", slot
+      console.log stack
+      count = 0
+      for crystal in @crystals[i]
+        x = @stackWidth / 2 / scale - 120 + @pseudoRandom (i*Math.PI*1000)*count, -10, 10
+        x *= scale
+        y = 100*@height/@stackWidth + count*20 + @pseudoRandom (i*Math.PI*2000)*count, 0, 4
+        y *= scale
+        r = @pseudoRandom (i*Math.PI*3000)*count, -10, 10
+        card = $('<div>').append $ @cardTemplate crystal
+        cardScale = scale * 1.4
+        card.css
+          "transform-origin": "50% 50%"
+          transform: "translate3d(#{x}px, #{y}px, 0px) rotateZ(#{r}deg) scale(#{cardScale})"
+          top: 10*count
+        
+        stack.append card
+        count++
+    #$('.unscaled', @div).css
+    #  transform: 'scale(' + 1/scale + ')'
+    @lastRender = thisRender
+    this
+
+  pseudoRandom: (seed, min, max) ->
+    r = seed*Math.PI*1000000
+    r = r - Math.floor(r)
+    return (max-min)*r + min
