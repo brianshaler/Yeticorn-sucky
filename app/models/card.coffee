@@ -6,4 +6,6 @@ module.exports = class Card extends Backbone.Model
     type: ''
   
   render: ->
+    if !@div?
+      @div = $ '<div>'
     @div.html(@template(@))
