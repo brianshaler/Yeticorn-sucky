@@ -1,7 +1,7 @@
 {
   "name": "nko3-yeticorn",
   "version": "0.0.13",
-  "description": "Yeticorn",
+  "description": "Yeticorn!",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
