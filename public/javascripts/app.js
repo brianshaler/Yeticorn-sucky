@@ -212,7 +212,8 @@ window.require.define({"models/game": function(exports, require, module) {
           positionX: 0,
           positionY: 0,
           player: {
-            name: "Hi"
+            name: "Hi",
+            color: "red"
           }
         }, {
           positionX: 1,
@@ -249,7 +250,8 @@ window.require.define({"models/game": function(exports, require, module) {
           positionX: 3,
           positionY: 2,
           player: {
-            name: "Yo"
+            name: "Yo",
+            color: "blue"
           },
           hasCard: true
         }, {
@@ -269,6 +271,100 @@ window.require.define({"models/game": function(exports, require, module) {
     };
 
     return Game;
+
+  })(Backbone.Model);
+  
+}});
+
+window.require.define({"models/tile": function(exports, require, module) {
+  var Tile, template,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  template = require('views/templates/tile');
+
+  module.exports = Tile = (function(_super) {
+
+    __extends(Tile, _super);
+
+    function Tile() {
+      return Tile.__super__.constructor.apply(this, arguments);
+    }
+
+    Tile.prototype.template = template;
+
+    Tile.prototype.defaults = {
+      positionX: 0,
+      positionY: 0,
+      card: false,
+      player: false
+    };
+
+    Tile.prototype.tileWidth = 240;
+
+    Tile.prototype.tileHeight = 210;
+
+    Tile.prototype.initialize = function(props) {
+      var prop, val;
+      if (props == null) {
+        props = {};
+      }
+      for (prop in props) {
+        val = props[prop];
+        this.attributes[prop] = val;
+      }
+      return this.div = $('<div>');
+    };
+
+    Tile.prototype.createHitarea = function(paper) {
+      var _this = this;
+      this.hitarea = paper.path("M0,0L0,0");
+      return $(this.hitarea.node).on('click touchstart', function(e) {
+        return _this.trigger('selectedTile', _this);
+      });
+    };
+
+    Tile.prototype.update = function(prop, val) {
+      var props;
+      if (typeof prop === 'object') {
+        props = prop;
+      } else {
+        props = {};
+        props[prop] = val;
+      }
+      for (prop in props) {
+        val = props[prop];
+        if ((prop != null) && this.attributes.hasOwnProperty(prop)) {
+          this.attributes[prop] = val;
+        }
+        this[prop] = val;
+      }
+      return this.render();
+    };
+
+    Tile.prototype.render = function() {
+      var x, x0, x1, x2, x3, y, y0, y1, y2;
+      if (this.hitarea != null) {
+        x = this.attributes.positionX * (this.tileWidth * .75);
+        y = (this.attributes.positionY + (this.attributes.positionX % 2 === 0 ? 0.5 : 0)) * this.tileHeight;
+        x0 = x;
+        x1 = x + this.tileWidth * .25;
+        x2 = x + this.tileWidth * .75;
+        x3 = x + this.tileWidth;
+        y0 = y;
+        y1 = y + this.tileHeight * .5;
+        y2 = y + this.tileHeight;
+        this.hitarea.attr({
+          path: "M" + x1 + "," + y0 + "L" + x2 + "," + y0 + "L" + x3 + "," + y1 + "L" + x2 + "," + y2 + "L" + x1 + "," + y2 + "L" + x0 + "," + y1 + "L" + x1 + "," + y0 + "Z",
+          fill: 'rgba(0,0,0,0)',
+          stroke: '#fff',
+          'stroke-width': 6
+        });
+      }
+      return this.div.html(this.template(this));
+    };
+
+    return Tile;
 
   })(Backbone.Model);
   
@@ -316,18 +412,24 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
 }});
 
 window.require.define({"views/game_view": function(exports, require, module) {
-  var GameView, template,
+  var GameView, Tile, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   template = require('views/templates/game');
 
+  Tile = require('models/tile');
+
   module.exports = GameView = (function(_super) {
 
     __extends(GameView, _super);
 
     function GameView() {
+      this.selectTile = __bind(this.selectTile, this);
+
+      this.resetPlayers = __bind(this.resetPlayers, this);
+
       this.resizeWindow = __bind(this.resizeWindow, this);
       return GameView.__super__.constructor.apply(this, arguments);
     }
@@ -337,48 +439,50 @@ window.require.define({"views/game_view": function(exports, require, module) {
     GameView.prototype.className = 'game-page';
 
     GameView.prototype.initialize = function() {
-      var col, rand1, rand2, row, tile, _i, _j, _k, _len, _ref, _ref1, _ref2, _ref3,
+      var col, row, tile, _i, _j, _k, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5,
         _this = this;
       $(window).on('viewportchanged', this.resizeWindow);
+      Handlebars.registerHelper('positionLeft', function(tile) {
+        return tile.attributes.positionX * (_this.tileWidth * .75);
+      });
+      Handlebars.registerHelper('positionTop', function(tile) {
+        return (tile.attributes.positionY + (tile.attributes.positionX % 2 === 0 ? 0.5 : 0)) * _this.tileHeight;
+      });
+      this.configRows = Math.ceil(Math.random() * 4 + 4);
+      this.configCols = Math.ceil(Math.random() * 4 + 8);
       this.rows = 0;
       this.cols = 0;
       this.tileWidth = 240;
       this.tileHeight = 210;
       this.model.attributes.tiles = [];
-      rand1 = Math.ceil(Math.random() * 8 + 4);
-      rand2 = Math.ceil(Math.random() * 10 + 8);
-      for (row = _i = 0; 0 <= rand1 ? _i <= rand1 : _i >= rand1; row = 0 <= rand1 ? ++_i : --_i) {
-        for (col = _j = 0; 0 <= rand2 ? _j <= rand2 : _j >= rand2; col = 0 <= rand2 ? ++_j : --_j) {
-          this.model.attributes.tiles.push({
+      for (row = _i = 0, _ref = this.configRows; 0 <= _ref ? _i <= _ref : _i >= _ref; row = 0 <= _ref ? ++_i : --_i) {
+        for (col = _j = 0, _ref1 = this.configCols; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
+          tile = new Tile();
+          tile.update({
             positionX: col,
-            positionY: row,
-            hasCard: (row % 5) + (col % 5) === 0,
-            player: Math.floor(Math.random() * 30) === 0
+            positionY: row
           });
+          this.model.attributes.tiles.push(tile);
         }
       }
-      if (((_ref = this.model) != null ? (_ref1 = _ref.attributes) != null ? (_ref2 = _ref1.tiles) != null ? _ref2.length : void 0 : void 0 : void 0) > 0) {
-        _ref3 = this.model.attributes.tiles;
-        for (_k = 0, _len = _ref3.length; _k < _len; _k++) {
-          tile = _ref3[_k];
-          this.rows = tile.positionY > this.rows ? tile.positionY : this.rows;
-          this.cols = tile.positionX > this.cols ? tile.positionX : this.cols;
+      this.resetPlayers();
+      if (((_ref2 = this.model) != null ? (_ref3 = _ref2.attributes) != null ? (_ref4 = _ref3.tiles) != null ? _ref4.length : void 0 : void 0 : void 0) > 0) {
+        _ref5 = this.model.attributes.tiles;
+        for (_k = 0, _len = _ref5.length; _k < _len; _k++) {
+          tile = _ref5[_k];
+          this.rows = tile.attributes.positionY > this.rows ? tile.attributes.positionY : this.rows;
+          this.cols = tile.attributes.positionX > this.cols ? tile.attributes.positionX : this.cols;
         }
       } else {
         console.log('Something really bad happened..');
       }
       this.rows += 1;
-      this.cols += 1;
-      Handlebars.registerHelper('positionLeft', function(tile) {
-        return tile.positionX * (_this.tileWidth * .75);
-      });
-      return Handlebars.registerHelper('positionTop', function(tile) {
-        return (tile.positionY + (tile.positionX % 2 === 0 ? 0.5 : 0)) * _this.tileHeight;
-      });
+      return this.cols += 1;
     };
 
     GameView.prototype.render = function() {
-      var event, tile, x, x0, x1, x2, x3, y, y0, y1, y2, _i, _len, _ref, _ref1, _ref2, _ref3;
+      var event, tile, _i, _len, _ref, _ref1, _ref2, _ref3,
+        _this = this;
       $('#page-container').html('');
       this.$el.appendTo('#page-container');
       this.$el.html(this.template(this.model));
@@ -387,20 +491,12 @@ window.require.define({"views/game_view": function(exports, require, module) {
         _ref3 = this.model.attributes.tiles;
         for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
           tile = _ref3[_i];
-          x = tile.positionX * (this.tileWidth * .75);
-          x0 = x;
-          x1 = x + this.tileWidth * .25;
-          x2 = x + this.tileWidth * .75;
-          x3 = x + this.tileWidth;
-          y = (tile.positionY + (tile.positionX % 2 === 0 ? 0.5 : 0)) * this.tileHeight;
-          y0 = y;
-          y1 = y + this.tileHeight * .5;
-          y2 = y + this.tileHeight;
-          this.hitareas.path("M" + x1 + "," + y0 + "L" + x2 + "," + y0 + "L" + x3 + "," + y1 + "L" + x2 + "," + y2 + "L" + x1 + "," + y2 + "L" + x0 + "," + y1 + "L" + x1 + "," + y0).attr({
-            fill: 'rgba(0,0,0,0)',
-            stroke: '#fff',
-            'stroke-width': 6
+          tile.createHitarea(this.hitareas);
+          tile.on('selectedTile', function(selectedTile) {
+            return _this.selectTile(selectedTile);
           });
+          tile.render();
+          $('.game-map').append(tile.div);
         }
       } else {
         console.log('Something really bad happened..');
@@ -413,15 +509,34 @@ window.require.define({"views/game_view": function(exports, require, module) {
     };
 
     GameView.prototype.resizeWindow = function(e) {
-      var event, mapHeight, mapWidth, offsetX, offsetY, scale, scaleX, scaleY, transform;
+      var event, isPlayer;
       event = e.originalEvent;
-      mapWidth = Math.ceil((this.cols + .5) * this.tileWidth * .75);
-      mapHeight = Math.ceil((this.rows + .5) * this.tileHeight);
-      scaleX = event.width / mapWidth;
-      scaleY = event.height / mapHeight;
+      isPlayer = true;
+      this.viewportWidth = event.width - 1;
+      this.viewportHeight = event.height - 1;
+      this.mapWidth = isPlayer ? Math.round(this.viewportWidth * .9) : this.viewportWidth;
+      this.mapHeight = isPlayer ? Math.round(this.viewportHeight * .9) : this.viewportHeight;
+      this.handWidth = this.viewportWidth - this.mapWidth;
+      this.crystalsHeight = this.viewportHeight - this.mapHeight;
+      this.renderMap();
+      if (isPlayer) {
+        this.renderCrystals();
+        return this.renderHand();
+      } else {
+        $('.crystals-holder').hide();
+        return $('.hand-holder').hide();
+      }
+    };
+
+    GameView.prototype.renderMap = function() {
+      var fullMapHeight, fullMapWidth, offsetX, offsetY, scale, scaleX, scaleY, transform;
+      fullMapWidth = Math.ceil((this.cols + .5) * this.tileWidth * .75);
+      fullMapHeight = Math.ceil((this.rows + .5) * this.tileHeight);
+      scaleX = this.mapWidth / fullMapWidth;
+      scaleY = this.mapHeight / fullMapHeight;
       scale = scaleX < scaleY ? scaleX : scaleY;
-      offsetX = Math.ceil((event.width - mapWidth * scale) / 2);
-      offsetY = Math.ceil((event.height - mapHeight * scale) / 2);
+      offsetX = Math.ceil((this.mapWidth - fullMapWidth * scale) / 2);
+      offsetY = Math.ceil((this.mapHeight - fullMapHeight * scale) / 2);
       transform = "scale(" + scale + ")";
       $('.game-board').css({
         '-webkit-transform': transform,
@@ -432,14 +547,69 @@ window.require.define({"views/game_view": function(exports, require, module) {
         left: "" + offsetX + "px",
         top: "" + offsetY + "px"
       });
-      $('#map-overlay').width(mapWidth).height(mapHeight);
-      return $('svg', $('#map-overlay')).width(mapWidth).height(mapHeight).attr({
-        width: mapWidth + "px",
-        height: mapHeight + "px"
+      $('.map-holder').width(this.mapWidth).height(this.mapHeight);
+      $('#map-overlay').width(fullMapWidth).height(fullMapHeight);
+      return $('svg', $('#map-overlay')).width(fullMapWidth).height(fullMapHeight).attr({
+        width: fullMapWidth + "px",
+        height: fullMapHeight + "px"
       });
     };
 
-    GameView.prototype.resetPlayers = function() {};
+    GameView.prototype.renderCrystals = function() {
+      var top;
+      top = this.viewportHeight - this.crystalsHeight;
+      return $('.crystals-holder').height(this.crystalsHeight).css({
+        top: "" + top + "px"
+      });
+    };
+
+    GameView.prototype.renderHand = function() {
+      var left;
+      left = this.viewportWidth - this.handWidth;
+      return $('.hand-holder').width(this.handWidth).height(this.viewportHeight).css({
+        left: "" + left + "px"
+      });
+    };
+
+    GameView.prototype.resetPlayers = function() {
+      var card, col, player, players, row, tile, _i, _len, _ref, _results;
+      players = ['blue', 'gray', 'orange', 'yellow'];
+      _ref = this.model.attributes.tiles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tile = _ref[_i];
+        row = tile.attributes.positionY;
+        col = tile.attributes.positionX;
+        if (Math.floor(Math.random() * 30) === 0) {
+          player = {
+            name: "dude",
+            color: players[Math.floor(Math.random() * players.length)]
+          };
+        } else {
+          player = false;
+        }
+        card = ((row + 2) % 5) + ((col + 2) % 5) === 0;
+        _results.push(tile.update({
+          player: player,
+          card: card
+        }));
+      }
+      return _results;
+    };
+
+    GameView.prototype.selectTile = function(tile) {
+      var str;
+      str = "";
+      if (tile.attributes.player) {
+        str += tile.attributes.player.color + "\n";
+      }
+      if (tile.attributes.card) {
+        str += "There's a card here!";
+      }
+      if (str.length > 0) {
+        return console.log(str);
+      }
+    };
 
     return GameView;
 
@@ -535,77 +705,10 @@ window.require.define({"views/player_setup_view": function(exports, require, mod
 window.require.define({"views/templates/game": function(exports, require, module) {
   module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
     helpers = helpers || Handlebars.helpers;
-    var buffer = "", stack1, stack2, foundHelper, tmp1, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
+    var foundHelper, self=this;
 
-  function program1(depth0,data) {
-    
-    var buffer = "", stack1, stack2;
-    buffer += "\n    <div class=\"game-tile";
-    foundHelper = helpers.hasCard;
-    stack1 = foundHelper || depth0.hasCard;
-    stack2 = helpers['if'];
-    tmp1 = self.program(2, program2, data);
-    tmp1.hash = {};
-    tmp1.fn = tmp1;
-    tmp1.inverse = self.noop;
-    stack1 = stack2.call(depth0, stack1, tmp1);
-    if(stack1 || stack1 === 0) { buffer += stack1; }
-    buffer += "\" style=\"left: ";
-    stack1 = depth0;
-    foundHelper = helpers.positionLeft;
-    stack2 = foundHelper || depth0.positionLeft;
-    if(typeof stack2 === functionType) { stack1 = stack2.call(depth0, stack1, { hash: {} }); }
-    else if(stack2=== undef) { stack1 = helperMissing.call(depth0, "positionLeft", stack1, { hash: {} }); }
-    else { stack1 = stack2; }
-    buffer += escapeExpression(stack1) + "px; top: ";
-    stack1 = depth0;
-    foundHelper = helpers.positionTop;
-    stack2 = foundHelper || depth0.positionTop;
-    if(typeof stack2 === functionType) { stack1 = stack2.call(depth0, stack1, { hash: {} }); }
-    else if(stack2=== undef) { stack1 = helperMissing.call(depth0, "positionTop", stack1, { hash: {} }); }
-    else { stack1 = stack2; }
-    buffer += escapeExpression(stack1) + "px;\">\n      ";
-    foundHelper = helpers.player;
-    stack1 = foundHelper || depth0.player;
-    stack2 = helpers['if'];
-    tmp1 = self.program(4, program4, data);
-    tmp1.hash = {};
-    tmp1.fn = tmp1;
-    tmp1.inverse = self.noop;
-    stack1 = stack2.call(depth0, stack1, tmp1);
-    if(stack1 || stack1 === 0) { buffer += stack1; }
-    buffer += "\n    </div>\n  ";
-    return buffer;}
-  function program2(depth0,data) {
-    
-    
-    return " tile-with-card";}
 
-  function program4(depth0,data) {
-    
-    var buffer = "", stack1;
-    buffer += "\n      <!-- <span>";
-    foundHelper = helpers.player;
-    stack1 = foundHelper || depth0.player;
-    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.name);
-    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
-    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "player.name", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "</span> -->\n      <img src=\"/images/player_on_tile.png\" />\n      ";
-    return buffer;}
-
-    buffer += "<div class=\"game-board game-map\">\n  ";
-    foundHelper = helpers.attributes;
-    stack1 = foundHelper || depth0.attributes;
-    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.tiles);
-    stack2 = helpers.each;
-    tmp1 = self.program(1, program1, data);
-    tmp1.hash = {};
-    tmp1.fn = tmp1;
-    tmp1.inverse = self.noop;
-    stack1 = stack2.call(depth0, stack1, tmp1);
-    if(stack1 || stack1 === 0) { buffer += stack1; }
-    buffer += "\n</div>\n<div class=\"game-board map-overlay\" id=\"map-overlay\" style=\"width: 1000px; height: 1000px;\">\n</div>\n";
-    return buffer;});
+    return "<div class=\"map-holder\">\n  <div class=\"game-board game-map\">\n  </div>\n  <div class=\"game-board map-overlay\" id=\"map-overlay\" style=\"width: 1000px; height: 1000px;\">\n  </div>\n</div>\n<div class=\"crystals-holder\">\n  \n</div>\n<div class=\"hand-holder\">\n  \n</div>";});
 }});
 
 window.require.define({"views/templates/game_setup": function(exports, require, module) {
@@ -633,5 +736,74 @@ window.require.define({"views/templates/player_setup": function(exports, require
 
 
     return "<header>\n  <h1>Yeticorn</h1>\n</header>\n\n<form method=\"post\" action=\"/\">\n\n  <div class=\"select-player\">\n    <a href=\"#\">Carl</a>\n    <a href=\"#\">???</a>\n  </div>\n\n  <div>\n    <input type=\"text\" placeholder=\"Player Name\" />\n  </div>\n\n  <p>\n    Meet Carl.\n  </p>\n\n  <p>\n    Carl has a bad habit of leaving \"The Gaga Pit of Doom\"\n    and seeking out lost wanderers for dinner.\n  </p>\n\n  <div>\n    <input type=\"submit\" value=\"Next &raquo;\" />\n  </div>\n\n</form>";});
+}});
+
+window.require.define({"views/templates/tile": function(exports, require, module) {
+  module.exports = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+    helpers = helpers || Handlebars.helpers;
+    var buffer = "", stack1, stack2, foundHelper, tmp1, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
+
+  function program1(depth0,data) {
+    
+    
+    return " tile-with-card";}
+
+  function program3(depth0,data) {
+    
+    var buffer = "", stack1;
+    buffer += "\n  <!-- <span>";
+    foundHelper = helpers.player;
+    stack1 = foundHelper || depth0.player;
+    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.name);
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "player.name", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "</span> -->\n  <img src=\"/images/player_";
+    foundHelper = helpers.attributes;
+    stack1 = foundHelper || depth0.attributes;
+    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.player);
+    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.color);
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "attributes.player.color", { hash: {} }); }
+    buffer += escapeExpression(stack1) + ".png\" />\n  ";
+    return buffer;}
+
+    buffer += "<div class=\"game-tile";
+    foundHelper = helpers.attributes;
+    stack1 = foundHelper || depth0.attributes;
+    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.card);
+    stack2 = helpers['if'];
+    tmp1 = self.program(1, program1, data);
+    tmp1.hash = {};
+    tmp1.fn = tmp1;
+    tmp1.inverse = self.noop;
+    stack1 = stack2.call(depth0, stack1, tmp1);
+    if(stack1 || stack1 === 0) { buffer += stack1; }
+    buffer += "\" style=\"left: ";
+    stack1 = depth0;
+    foundHelper = helpers.positionLeft;
+    stack2 = foundHelper || depth0.positionLeft;
+    if(typeof stack2 === functionType) { stack1 = stack2.call(depth0, stack1, { hash: {} }); }
+    else if(stack2=== undef) { stack1 = helperMissing.call(depth0, "positionLeft", stack1, { hash: {} }); }
+    else { stack1 = stack2; }
+    buffer += escapeExpression(stack1) + "px; top: ";
+    stack1 = depth0;
+    foundHelper = helpers.positionTop;
+    stack2 = foundHelper || depth0.positionTop;
+    if(typeof stack2 === functionType) { stack1 = stack2.call(depth0, stack1, { hash: {} }); }
+    else if(stack2=== undef) { stack1 = helperMissing.call(depth0, "positionTop", stack1, { hash: {} }); }
+    else { stack1 = stack2; }
+    buffer += escapeExpression(stack1) + "px;\">\n  ";
+    foundHelper = helpers.attributes;
+    stack1 = foundHelper || depth0.attributes;
+    stack1 = (stack1 === null || stack1 === undefined || stack1 === false ? stack1 : stack1.player);
+    stack2 = helpers['if'];
+    tmp1 = self.program(3, program3, data);
+    tmp1.hash = {};
+    tmp1.fn = tmp1;
+    tmp1.inverse = self.noop;
+    stack1 = stack2.call(depth0, stack1, tmp1);
+    if(stack1 || stack1 === 0) { buffer += stack1; }
+    buffer += "\n</div>\n";
+    return buffer;});
 }});
 

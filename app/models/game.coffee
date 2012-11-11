@@ -1,7 +1,7 @@
 module.exports = class Game extends Backbone.Model
   defaults:
     tiles: [
-      {positionX: 0, positionY: 0, player: {name: "Hi"}},
+      {positionX: 0, positionY: 0, player: {name: "Hi", color: "red"}},
       {positionX: 1, positionY: 0},
       {positionX: 2, positionY: 0},
       {positionX: 3, positionY: 0},
@@ -12,7 +12,7 @@ module.exports = class Game extends Backbone.Model
       {positionX: 0, positionY: 2},
       {positionX: 1, positionY: 2},
       {positionX: 2, positionY: 2},
-      {positionX: 3, positionY: 2, player: {name: "Yo"}, hasCard: true},
+      {positionX: 3, positionY: 2, player: {name: "Yo", color: "blue"}, hasCard: true},
       {positionX: 0, positionY: 3},
       {positionX: 1, positionY: 3},
       {positionX: 2, positionY: 3},

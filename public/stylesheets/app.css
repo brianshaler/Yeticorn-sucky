@@ -657,17 +657,28 @@ h1 {
   -ms-transform-origin: 0 0;
   transform-origin: 0 0;
 }
-.game-page .game-tile {
+.game-page .game-board .game-tile {
   position: absolute;
   width: 240px;
   height: 210px;
   background: transparent url("/images/tile_bg.png") top left no-repeat;
 }
-.game-page .game-tile span {
+.game-page .game-board .game-tile span {
   font-weight: bold;
 }
-.game-page .tile-with-card {
+.game-page .game-board .tile-with-card {
   background: transparent url("/images/tile_with_card.png") top left no-repeat;
+}
+.game-page .crystals-holder {
+  position: absolute;
+  left: 0px;
+  width: 100%;
+  background-color: #77a;
+}
+.game-page .hand-holder {
+  position: absolute;
+  top: 0px;
+  background-color: #77a;
 }
 /* ==========================================================================
    Helper classes

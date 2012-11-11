@@ -7,12 +7,21 @@
   .game-board
     position: absolute
     transform-origin: 0 0
-  .game-tile
+    .game-tile
+      position: absolute
+      width: 240px
+      height: 210px
+      background: transparent url('/images/tile_bg.png') top left no-repeat
+      span
+        font-weight: bold
+    .tile-with-card
+      background: transparent url('/images/tile_with_card.png') top left no-repeat
+  .crystals-holder
     position: absolute
-    width: 240px
-    height: 210px
-    background: transparent url('/images/tile_bg.png') top left no-repeat;
-    span
-      font-weight: bold
-  .tile-with-card
-    background: transparent url('/images/tile_with_card.png') top left no-repeat;
+    left: 0px
+    width: 100%
+    background-color: #77a
+  .hand-holder
+    position: absolute
+    top: 0px
+    background-color: #77a

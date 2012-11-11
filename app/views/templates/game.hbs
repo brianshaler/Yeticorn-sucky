@@ -1,12 +1,12 @@
-<div class="game-board game-map">
-  {{#each attributes.tiles}}
-    <div class="game-tile{{#if hasCard}} tile-with-card{{/if}}" style="left: {{positionLeft this}}px; top: {{positionTop this}}px;">
-      {{#if player}}
-      <!-- <span>{{player.name}}</span> -->
-      <img src="/images/player_on_tile.png" />
-      {{/if}}
-    </div>
-  {{/each}}
+<div class="map-holder">
+  <div class="game-board game-map">
+  </div>
+  <div class="game-board map-overlay" id="map-overlay" style="width: 1000px; height: 1000px;">
+  </div>
 </div>
-<div class="game-board map-overlay" id="map-overlay" style="width: 1000px; height: 1000px;">
+<div class="crystals-holder">
+  
+</div>
+<div class="hand-holder">
+  
 </div>

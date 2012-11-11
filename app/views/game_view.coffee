@@ -1,4 +1,5 @@
 template = require 'views/templates/game'
+Tile = require 'models/tile'
 
 module.exports = class GameView extends Backbone.View
   template: template
@@ -7,33 +8,37 @@ module.exports = class GameView extends Backbone.View
   initialize: ->
     $(window).on 'viewportchanged', @resizeWindow
     
+    Handlebars.registerHelper 'positionLeft', (tile) =>
+      tile.attributes.positionX * (@tileWidth * .75)
+    Handlebars.registerHelper 'positionTop', (tile) =>
+      (tile.attributes.positionY + (if tile.attributes.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
+    
+    @configRows = Math.ceil Math.random()*4 + 4
+    @configCols = Math.ceil Math.random()*4 + 8
+    
     @rows = 0
     @cols = 0
     @tileWidth = 240
     @tileHeight = 210
     
     @model.attributes.tiles = []
+    for row in [0..@configRows]
+      for col in [0..@configCols]
+        tile = new Tile()
+        tile.update positionX: col, positionY: row
+        @model.attributes.tiles.push tile
     
-    rand1 = Math.ceil Math.random()*8 + 4
-    rand2 = Math.ceil Math.random()*10 + 8
-    for row in [0..rand1]
-      for col in [0..rand2]
-        @model.attributes.tiles.push positionX: col, positionY: row, hasCard: ((row % 5) + (col % 5) == 0), player: (Math.floor(Math.random()*30) == 0)
+    @resetPlayers()
     
     if @model?.attributes?.tiles?.length > 0
       for tile in @model.attributes.tiles
-        @rows = if tile.positionY > @rows then tile.positionY else @rows
-        @cols = if tile.positionX > @cols then tile.positionX else @cols
+        @rows = if tile.attributes.positionY > @rows then tile.attributes.positionY else @rows
+        @cols = if tile.attributes.positionX > @cols then tile.attributes.positionX else @cols
     else
       console.log 'Something really bad happened..'
     
     @rows += 1
     @cols += 1
-    
-    Handlebars.registerHelper 'positionLeft', (tile) =>
-      tile.positionX * (@tileWidth * .75)
-    Handlebars.registerHelper 'positionTop', (tile) =>
-      (tile.positionY + (if tile.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
 
   render: ->
     $('#page-container').html ''
@@ -44,20 +49,13 @@ module.exports = class GameView extends Backbone.View
     
     if @model?.attributes?.tiles?.length > 0
       for tile in @model.attributes.tiles
-        x = tile.positionX * (@tileWidth * .75)
-        x0 = x
-        x1 = x + @tileWidth * .25
-        x2 = x + @tileWidth * .75
-        x3 = x + @tileWidth
-        y = (tile.positionY + (if tile.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
-        y0 = y
-        y1 = y + @tileHeight * .5
-        y2 = y + @tileHeight
-        @hitareas.path("M#{x1},#{y0}L#{x2},#{y0}L#{x3},#{y1}L#{x2},#{y2}L#{x1},#{y2}L#{x0},#{y1}L#{x1},#{y0}")
-          .attr
-            fill: 'rgba(0,0,0,0)'
-            stroke: '#fff'
-            'stroke-width': 6
+        tile.createHitarea @hitareas
+        tile.on 'selectedTile', (selectedTile) =>
+          @selectTile selectedTile
+          #@resetPlayers()
+        
+        tile.render()
+        $('.game-map').append tile.div
     else
       console.log 'Something really bad happened..'
     
@@ -69,13 +67,36 @@ module.exports = class GameView extends Backbone.View
 
   resizeWindow: (e) =>
     event = e.originalEvent
-    mapWidth = Math.ceil (@cols+.5) * @tileWidth*.75
-    mapHeight = Math.ceil (@rows+.5) * @tileHeight
-    scaleX = event.width / mapWidth
-    scaleY = event.height / mapHeight
+    isPlayer = true
+    
+    @viewportWidth = event.width - 1
+    @viewportHeight = event.height - 1
+    
+    @mapWidth = if isPlayer then Math.round(@viewportWidth * .9) else @viewportWidth
+    @mapHeight = if isPlayer then Math.round(@viewportHeight * .9) else @viewportHeight
+    
+    @handWidth = @viewportWidth - @mapWidth
+    @crystalsHeight = @viewportHeight - @mapHeight
+    
+    @renderMap()
+    
+    if isPlayer
+      @renderCrystals()
+      @renderHand()
+      #@renderWeapons()
+    else
+      $('.crystals-holder').hide()
+      $('.hand-holder').hide()
+
+  renderMap: () ->
+    fullMapWidth = Math.ceil (@cols+.5) * @tileWidth*.75
+    fullMapHeight = Math.ceil (@rows+.5) * @tileHeight
+    
+    scaleX = @mapWidth / fullMapWidth
+    scaleY = @mapHeight / fullMapHeight
     scale = if scaleX < scaleY then scaleX else scaleY
-    offsetX = Math.ceil (event.width - mapWidth*scale) / 2
-    offsetY = Math.ceil (event.height - mapHeight*scale) / 2
+    offsetX = Math.ceil (@mapWidth - fullMapWidth*scale) / 2
+    offsetY = Math.ceil (@mapHeight - fullMapHeight*scale) / 2
     transform = "scale(" + scale + ")"
     $('.game-board').css(
       '-webkit-transform': transform
@@ -86,8 +107,41 @@ module.exports = class GameView extends Backbone.View
       left: "#{offsetX}px",
       top: "#{offsetY}px"
     )
-    $('#map-overlay').width(mapWidth).height(mapHeight)
-    $('svg', $('#map-overlay')).width(mapWidth).height(mapHeight).attr width: mapWidth+"px", height: mapHeight+"px"
-
-  resetPlayers: () ->
     
+    $('.map-holder').width(@mapWidth).height(@mapHeight)
+    $('#map-overlay').width(fullMapWidth).height(fullMapHeight)
+    $('svg', $('#map-overlay')).width(fullMapWidth).height(fullMapHeight).attr width: fullMapWidth+"px", height: fullMapHeight+"px"
+
+  renderCrystals: () ->
+    top = @viewportHeight - @crystalsHeight
+    $('.crystals-holder').height(@crystalsHeight).css(top: "#{top}px")
+
+  renderHand: () ->
+    left = @viewportWidth - @handWidth
+    $('.hand-holder').width(@handWidth).height(@viewportHeight).css(left: "#{left}px")
+
+  resetPlayers: () =>
+    players = ['blue', 'gray', 'orange', 'yellow']
+    for tile in @model.attributes.tiles
+      row = tile.attributes.positionY
+      col = tile.attributes.positionX
+      if Math.floor(Math.random()*30) == 0
+        player = 
+          name: "dude"
+          color: players[Math.floor(Math.random()*players.length)]
+      else
+        player = false
+      card = ((row+2) % 5) + ((col+2) % 5) == 0
+      
+      tile.update player: player, card: card
+
+  selectTile: (tile) =>
+    str = ""
+    if tile.attributes.player
+      str += tile.attributes.player.color + "\n"
+    
+    if tile.attributes.card
+      str += "There's a card here!"
+    
+    if str.length > 0
+      console.log str
