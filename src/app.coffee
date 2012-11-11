@@ -13,6 +13,7 @@ PlayerSchema = require './db/PlayerSchema'
 module.exports = class ServerApp extends Backbone.Model
 
   initialize: ->
+    @rootPath = path.dirname(path.normalize(__dirname))
     @initExpress()
     @initMongo()
     @initSockets()
@@ -27,8 +28,12 @@ module.exports = class ServerApp extends Backbone.Model
       @app.use express.logger('dev')
       @app.use express.bodyParser()
       @app.use express.methodOverride()
+
+      @app.get '/', (req, res) ->
+        res.status(200).sendfile(path.join(@rootPath, 'public', 'index.html'))
       @app.use @app.router
-      @app.use express.static(path.join(path.dirname(path.normalize(__dirname)), 'public'))
+
+      @app.use express.static(path.join(@rootPath, 'public'))
       @app.use express.errorHandler()
 
   initMongo: ->
