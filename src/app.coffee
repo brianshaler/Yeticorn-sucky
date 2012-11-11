@@ -28,7 +28,7 @@ module.exports = class ServerApp extends Backbone.Model
       @app.use express.bodyParser()
       @app.use express.methodOverride()
       @app.use @app.router
-      @app.use express.static(path.join(__dirname, '..', 'public'))
+      @app.use express.static(path.join(path.dirname(path.normalize(__dirname)), 'public'))
 
     @app.configure 'development', =>
       @app.use express.errorHandler()
