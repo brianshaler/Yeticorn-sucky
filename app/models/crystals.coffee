@@ -79,11 +79,10 @@ module.exports = class Crystals extends Backbone.Model
       return @
     
     # if there are already events, cleanup
-    #$('.crystals-stack', @div).unbind()
+    $('.crystals-stack', @div).unbind()
     
     unscaledWidth = 800
     @stackWidth = Math.floor @width/6
-    console.log "Scale: #{unscaledWidth}/#{@stackWidth}"
     scale = @width / (unscaledWidth*6)
     
     @div.html(@template(@))
@@ -99,7 +98,6 @@ module.exports = class Crystals extends Backbone.Model
       slot.css
         left: i*@stackWidth + "px"
       stack = $ ".cards", slot
-      console.log stack
       count = 0
       for crystal in @crystals[i]
         x = @stackWidth / 2 / scale - 120 + @pseudoRandom (i*Math.PI*1000)*count, -10, 10
