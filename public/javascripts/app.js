@@ -675,7 +675,7 @@ window.require.define({"models/hand": function(exports, require, module) {
         cardScale = scale * 1;
         card.div.css({
           "transform-origin": "50% 50%",
-          transform: "translate3d(-" + this.cardWidth / 2 + "px, -" + this.cardHeight / 2 + (", 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)")
+          transform: "translate3d(-" + (this.cardWidth / 2) + "px, -" + (this.cardHeight / 2) + ("px, 0px) scale(" + cardScale + ") translate3d(" + x + "px, " + y + "px, 0px) rotateZ(" + r + "deg)")
         });
         count++;
       }

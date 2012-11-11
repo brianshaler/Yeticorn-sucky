@@ -92,7 +92,7 @@ module.exports = class Crystals extends Backbone.Model
       cardScale = scale * 1
       card.div.css
         "transform-origin": "50% 50%"
-        transform: "translate3d(-"+@cardWidth/2+"px, -"+@cardHeight/2+", 0px) scale(#{cardScale}) translate3d(#{x}px, #{y}px, 0px) rotateZ(#{r}deg)"
+        transform: "translate3d(-"+(@cardWidth/2)+"px, -"+(@cardHeight/2)+"px, 0px) scale(#{cardScale}) translate3d(#{x}px, #{y}px, 0px) rotateZ(#{r}deg)"
       count++
     
     @cached = true
