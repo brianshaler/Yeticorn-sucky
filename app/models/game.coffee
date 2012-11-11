@@ -6,7 +6,7 @@ module.exports = class Game extends Backbone.Model
     gameId: ''
     tiles: []
   
-  initialize: (@socket) ->
+  initialize: () ->
     @socket.on 'game.boardSetup', (data) =>
       for obj in data
         tile = new Tile()

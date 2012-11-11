@@ -66,7 +66,8 @@ module.exports = class Application extends Backbone.Model
     @showGame()
 
   showGame: ->
-    @model = new Game(@socket)
+    @model = new Game()
+    @model.socket = @socket
     @gameView = new GameView({@model})
     @model.on 'game.start', =>
       @gameView.render()
