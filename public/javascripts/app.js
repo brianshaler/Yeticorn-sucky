@@ -181,11 +181,14 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.showGame = function() {
+      var _this = this;
       this.model = new Game(this.socket);
       this.gameView = new GameView({
         model: this.model
       });
-      return this.gameView.render();
+      return this.model.on('game.start', function() {
+        return _this.gameView.render();
+      });
     };
 
     return Application;
@@ -503,7 +506,24 @@ window.require.define({"models/game": function(exports, require, module) {
     };
 
     Game.prototype.initialize = function(socket) {
+      var _this = this;
       this.socket = socket;
+      return this.socket.on('game.boardSetup', function(data) {
+        var obj, tile, _i, _len;
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          obj = data[_i];
+          tile = new Tile();
+          tile.positionX = obj.positionX;
+          tile.positionY = obj.positionY;
+          if (obj.card) {
+            tile.card = obj.card;
+          }
+          if (obj.player) {
+            tile.player = obj.player;
+          }
+        }
+        return _this.trigger('game.start');
+      });
     };
 
     return Game;
