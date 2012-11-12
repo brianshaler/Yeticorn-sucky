@@ -6,12 +6,14 @@ module.exports = class Tile extends Backbone.Model
     positionY: 0
     card: false
     player: false
+    cardPickup: false
   
   tileWidth: 240
   tileHeight: 210
 
-  initialize: ->
+  initialize: (props) ->
     @div = $ '<div>'
+    @update props
 
   createHitarea: (paper) ->
     @hitarea = paper.path "M0,0L0,0"
@@ -59,4 +61,5 @@ module.exports = class Tile extends Backbone.Model
           stroke: '#fff'
           'stroke-width': 6
     
-    @div.html(@template(this))
+    if @positionX >= 0 and @positionY >= 0
+      @div.html(@template(this))

@@ -98,13 +98,22 @@ window.require.define({"application": function(exports, require, module) {
     }
 
     Application.prototype.initialize = function() {
+      var _this = this;
       this.enteredName = _.once(this.enteredName);
       this.clickedPlay = _.once(this.clickedPlay);
-      return $(window).on("viewportchanged", function(e) {
+      $(window).on("viewportchanged", function(e) {
         var event;
         event = e.originalEvent;
         window.viewportWidth = event.width;
         return window.viewportHeight = event.height;
+      });
+      this.tileWidth = 240;
+      this.tileHeight = 210;
+      Handlebars.registerHelper('positionLeft', function(tile) {
+        return tile.attributes.positionX * (_this.tileWidth * .75);
+      });
+      return Handlebars.registerHelper('positionTop', function(tile) {
+        return (tile.attributes.positionY + (tile.attributes.positionX % 2 === 0 ? 0.5 : 0)) * _this.tileHeight;
       });
     };
 
@@ -117,6 +126,8 @@ window.require.define({"application": function(exports, require, module) {
     Application.prototype.connectSocket = function() {
       var _this = this;
       this.socket = io.connect(window.location.href);
+      this.showGame();
+      return;
       this.socket.on('intro.show', function() {
         return _this.intro();
       });
@@ -185,7 +196,9 @@ window.require.define({"application": function(exports, require, module) {
       this.gameView = new GameView({
         model: this.model
       });
-      return this.gameView.render();
+      this.model.on('game.started', this.gameView.init);
+      this.model.on('game.rerender', this.gameView.init);
+      return this.model.init();
     };
 
     return Application;
@@ -313,49 +326,30 @@ window.require.define({"models/crystals": function(exports, require, module) {
     Crystals.prototype.cardHeight = cardHeight;
 
     Crystals.prototype.defaults = {
-      player: '',
-      crystals: [[], [], [], [], [], []],
-      lastRender: [-1, 0, 0, 0, 0, 0],
-      left: 0,
-      right: 0,
-      top: 0,
-      width: 1,
-      height: 1
+      player: ''
     };
 
     Crystals.prototype.initialize = function() {
-      var crystal, i, prop, val, _i, _ref, _ref1, _results;
+      var crystal, i, _i, _ref, _results;
       this.div = $('<div>');
       this.width = 1;
       this.height = 1;
-      _ref = this.attributes;
-      for (prop in _ref) {
-        val = _ref[prop];
-        this[prop] = val;
-      }
-      this.crystals[0].push(new Crystal());
-      this.crystals[0].push(new Crystal());
-      this.crystals[0].push(new Crystal());
-      this.crystals[2].push(new Crystal());
-      this.crystals[2].push(new Crystal());
-      this.crystals[2].push(new Crystal());
-      this.crystals[3].push(new Crystal());
-      this.crystals[3].push(new Crystal());
-      this.crystals[3].push(new Crystal());
-      this.crystals[3].push(new Crystal());
-      this.crystals[3].push(new Crystal());
-      this.crystals[4].push(new Crystal());
-      this.crystals[4].push(new Crystal());
-      this.crystals[4].push(new Crystal());
-      this.crystals[5].push(new Crystal());
+      this.player = '';
+      this.crystals = [[], [], [], [], [], []];
+      this.lastRender = [-1, 0, 0, 0, 0, 0];
+      this.left = 0;
+      this.right = 0;
+      this.top = 0;
+      this.width = 1;
+      this.height = 1;
       _results = [];
-      for (i = _i = 0, _ref1 = this.crystals.length - 1; 0 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+      for (i = _i = 0, _ref = this.crystals.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
         _results.push((function() {
-          var _j, _len, _ref2, _results1;
-          _ref2 = this.crystals[i];
+          var _j, _len, _ref1, _results1;
+          _ref1 = this.crystals[i];
           _results1 = [];
-          for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
-            crystal = _ref2[_j];
+          for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+            crystal = _ref1[_j];
             _results1.push(crystal.energy = i);
           }
           return _results1;
@@ -374,9 +368,6 @@ window.require.define({"models/crystals": function(exports, require, module) {
       }
       for (prop in props) {
         val = props[prop];
-        if ((prop != null) && this.attributes.hasOwnProperty(prop)) {
-          this.attributes[prop] = val;
-        }
         this[prop] = val;
       }
       return this.render();
@@ -481,7 +472,8 @@ window.require.define({"models/crystals": function(exports, require, module) {
 }});
 
 window.require.define({"models/game": function(exports, require, module) {
-  var Backbone, Game, Tile,
+  var Backbone, Crystal, Crystals, Game, Player, Spell, Tile, Weapon,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -489,21 +481,467 @@ window.require.define({"models/game": function(exports, require, module) {
 
   Tile = require('./tile');
 
+  Player = require('./player');
+
+  Crystals = require('models/crystals');
+
+  Weapon = require('models/weapon_card');
+
+  Crystal = require('models/crystal_card');
+
+  Spell = require('models/spell_card');
+
   module.exports = Game = (function(_super) {
 
     __extends(Game, _super);
 
     function Game() {
+      this.endTurn = __bind(this.endTurn, this);
+
+      this.changePlayer = __bind(this.changePlayer, this);
+
+      this.addPlayerToTile = __bind(this.addPlayerToTile, this);
+
+      this.placePlayers = __bind(this.placePlayers, this);
+
+      this.init = __bind(this.init, this);
       return Game.__super__.constructor.apply(this, arguments);
     }
 
     Game.prototype.defaults = {
-      gameId: '',
-      tiles: []
+      gameId: ''
     };
 
     Game.prototype.initialize = function(socket) {
+      var colors, i, player, playerNames, _i, _ref;
       this.socket = socket;
+      playerNames = ['@brianshaler', '@batkin', '@bobrox', '@johnmurch'];
+      colors = ['blue', 'yellow', 'orange', 'gray'];
+      this.players = [];
+      for (i = _i = 0, _ref = playerNames.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        player = new Player(playerNames[i]);
+        player.color = colors[i];
+        this.players.push(player);
+      }
+      console.log(this.players);
+      this.meId = this.currentPlayerId = Math.floor(Math.random() * this.players.length);
+      this.currentPlayer = this.players[this.currentPlayerId];
+      this.me = this.currentPlayer;
+      this.tiles = [];
+      this.cards = [];
+      this.deck = [];
+      this.generateMap();
+      this.generateDeck();
+      this.cardsOnBoard();
+      this.dealCards();
+      return this.placePlayers();
+    };
+
+    Game.prototype.init = function() {
+      return this.trigger('game.started');
+    };
+
+    Game.prototype.generateMap = function() {
+      var cardPickup, col, mapCols, mapRows, row, tile, _i, _results;
+      mapRows = 6;
+      mapCols = 10;
+      _results = [];
+      for (row = _i = 0; 0 <= mapRows ? _i <= mapRows : _i >= mapRows; row = 0 <= mapRows ? ++_i : --_i) {
+        _results.push((function() {
+          var _j, _results1;
+          _results1 = [];
+          for (col = _j = 0; 0 <= mapCols ? _j <= mapCols : _j >= mapCols; col = 0 <= mapCols ? ++_j : --_j) {
+            tile = new Tile();
+            cardPickup = ((row + 1) % 2) + ((col + 1) % 3) === 0 ? true : false;
+            tile.update({
+              positionX: col,
+              positionY: row,
+              cardPickup: cardPickup
+            });
+            _results1.push(this.tiles.push(tile));
+          }
+          return _results1;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    Game.prototype.generateDeck = function() {
+      var card, count, deck, obj, _i, _j, _len, _ref, _results;
+      deck = [];
+      deck.push({
+        type: 'weapon',
+        name: 'Spork',
+        damage: 1,
+        description: 'The Spork can rip out your opponents eyes leaving them blind',
+        playCost: 1,
+        useCost: 1
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Shuriken',
+        damage: 2,
+        description: 'Aim for the jugular of your opponent with this powerful weapon',
+        playCost: 2,
+        useCost: 2
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Frying Pan',
+        damage: 3,
+        description: 'Stolen from the kitchen of a mad chef the magical Frying Pan is bloody',
+        playCost: 3,
+        useCost: 2
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Ray Gun',
+        damage: 4,
+        description: 'Set the Ray Gun to stun to freeze and hurt your opponent',
+        playCost: 3,
+        useCost: 3
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Bowling Ball',
+        damage: 4,
+        description: 'Be sure to throw this directly at the unicorn',
+        playCost: 4,
+        useCost: 4
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Scissors',
+        damage: 5,
+        description: 'Be sure to RUN with Scissors before and after cutting off your opponents ear',
+        playCost: 5,
+        useCost: 5
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Axe',
+        damage: 6,
+        description: 'Strike hard and fast with the powerful axe',
+        playCost: 6,
+        useCost: 6
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Rusty Fork',
+        damage: 1,
+        description: 'poop',
+        playCost: 0,
+        useCost: 1
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Spork',
+        damage: 1,
+        description: 'The Spork can rip out your opponents eyes leaving them blind',
+        playCost: 1,
+        useCost: 1
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Shuriken',
+        damage: 2,
+        description: 'Aim for the jugular of your opponent with this powerful weapon',
+        playCost: 2,
+        useCost: 2
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Frying Pan',
+        damage: 3,
+        description: 'Stolen from the kitchen of a mad chef the magical Frying Pan is bloody',
+        playCost: 3,
+        useCost: 2
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Ray Gun',
+        damage: 4,
+        description: 'Set the Ray Gun to stun to freeze and hurt your opponent',
+        playCost: 3,
+        useCost: 3
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Bowling Ball',
+        damage: 4,
+        description: 'Be sure to throw this directly at the unicorn',
+        playCost: 4,
+        useCost: 4
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Scissors',
+        damage: 5,
+        description: 'Be sure to RUN with Scissors before and after cutting off your opponents ear',
+        playCost: 5,
+        useCost: 5
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Axe',
+        damage: 6,
+        description: 'Strike hard and fast with the powerful axe',
+        playCost: 6,
+        useCost: 6
+      });
+      deck.push({
+        type: 'weapon',
+        name: 'Rusty Fork',
+        damage: 1,
+        description: 'poop',
+        playCost: 0,
+        useCost: 1
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      deck.push({
+        type: 'spell',
+        name: 'bounce',
+        damage: 0,
+        description: 'poop',
+        playCost: 2,
+        useCost: 0
+      });
+      count = deck.length;
+      for (_i = 0, _ref = count * .4; 0 <= _ref ? _i <= _ref : _i >= _ref; 0 <= _ref ? _i++ : _i--) {
+        deck.push({
+          type: 'crystal',
+          name: 'Crystal',
+          damage: 0,
+          description: 'bling bling',
+          playCost: 0,
+          useCost: 0
+        });
+      }
+      _results = [];
+      for (_j = 0, _len = deck.length; _j < _len; _j++) {
+        obj = deck[_j];
+        switch (obj.type) {
+          case 'weapon':
+            card = new Weapon(obj);
+            break;
+          case 'crystal':
+            card = new Crystal(obj);
+            break;
+          case 'spell':
+            card = new Spell(obj);
+            break;
+          default:
+            card = null;
+        }
+        if (card != null) {
+          _results.push(this.cards.splice(Math.floor(Math.random() * this.cards.length), null, card));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Game.prototype.cardsOnBoard = function() {
+      var tile, _i, _len, _ref, _results;
+      _ref = this.tiles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tile = _ref[_i];
+        if (tile.cardPickup) {
+          _results.push(tile.update({
+            card: this.cards.pop()
+          }));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Game.prototype.dealCards = function() {
+      var i, player, startingCards, _i, _ref, _results;
+      startingCards = 2;
+      _results = [];
+      for (i = _i = 0, _ref = startingCards - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        _results.push((function() {
+          var _j, _len, _ref1, _results1;
+          _ref1 = this.players;
+          _results1 = [];
+          for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+            player = _ref1[_j];
+            _results1.push(player.addCardToHand(this.cards.pop()));
+          }
+          return _results1;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    Game.prototype.placePlayers = function() {
+      var attempts, player, tile, tileId, _i, _len, _ref, _results, _tile, _tileId;
+      _ref = this.players;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        player = _ref[_i];
+        attempts = 0;
+        tileId = 0;
+        tile = this.tiles[_tileId];
+        while (attempts < 100) {
+          _tileId = Math.floor(Math.random() * this.tiles.length);
+          _tile = this.tiles[_tileId];
+          if (!_tile.player && !_tile.cardPickup) {
+            tileId = _tileId;
+            tile = _tile;
+            attempts = 999999;
+          }
+          attempts++;
+          console.log("1 Add player " + player.name + " to tile " + tile.positionX + "x" + tile.positionY);
+        }
+        _results.push(this.addPlayerToTile(player, tile));
+      }
+      return _results;
+    };
+
+    Game.prototype.addPlayerToTile = function(player, tile) {
+      var _i, _len, _ref, _tile;
+      _ref = this.tiles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _tile = _ref[_i];
+        if (_tile.player && _tile.player.name === player.name) {
+          _tile.player = null;
+        }
+      }
+      console.log("Add player " + player.name + " to tile " + tile.positionX + "x" + tile.positionY);
+      return tile.update({
+        player: player
+      });
+    };
+
+    Game.prototype.changePlayer = function() {
+      this.meId++;
+      if (this.meId >= this.players.length) {
+        this.meId = 0;
+      }
+      this.me = this.players[this.meId];
+      console.log("I am " + this.me.name + "!");
+      return this.trigger('game.rerender');
+    };
+
+    Game.prototype.endTurn = function() {
+      this.currentPlayerId++;
+      if (this.currentPlayerId >= this.players.length) {
+        this.currentPlayerId = 0;
+      }
+      this.meId = this.currentPlayerId;
+      this.me = this.players[this.meId];
+      this.currentPlayer = this.players[this.currentPlayerId];
+      this.currentPlayer.addCardToHand(this.cards.pop());
+      this.currentPlayer.crystals.incrementAll();
+      return this.trigger('game.rerender');
     };
 
     return Game;
@@ -663,6 +1101,45 @@ window.require.define({"models/hand": function(exports, require, module) {
   
 }});
 
+window.require.define({"models/player": function(exports, require, module) {
+  var Backbone, Crystal, Crystals, Player,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Backbone = require('./backbone');
+
+  Crystal = require('models/crystal_card');
+
+  Crystals = require('models/crystals');
+
+  module.exports = Player = (function(_super) {
+
+    __extends(Player, _super);
+
+    function Player() {
+      return Player.__super__.constructor.apply(this, arguments);
+    }
+
+    Player.prototype.initialize = function(name) {
+      this.name = name;
+      this.life = 100;
+      this.hand = [];
+      this.crystals = new Crystals();
+      this.weapons = [];
+      this.spells = [];
+      return this.crystals.crystals[Math.floor(Math.random() * 5)].push(new Crystal());
+    };
+
+    Player.prototype.addCardToHand = function(card) {
+      return this.hand.push(card);
+    };
+
+    return Player;
+
+  })(Backbone.Model);
+  
+}});
+
 window.require.define({"models/spell_card": function(exports, require, module) {
   var Card, Spell,
     __hasProp = {}.hasOwnProperty,
@@ -707,15 +1184,17 @@ window.require.define({"models/tile": function(exports, require, module) {
       positionX: 0,
       positionY: 0,
       card: false,
-      player: false
+      player: false,
+      cardPickup: false
     };
 
     Tile.prototype.tileWidth = 240;
 
     Tile.prototype.tileHeight = 210;
 
-    Tile.prototype.initialize = function() {
-      return this.div = $('<div>');
+    Tile.prototype.initialize = function(props) {
+      this.div = $('<div>');
+      return this.update(props);
     };
 
     Tile.prototype.createHitarea = function(paper) {
@@ -768,7 +1247,9 @@ window.require.define({"models/tile": function(exports, require, module) {
           'stroke-width': 6
         });
       }
-      return this.div.html(this.template(this));
+      if (this.positionX >= 0 && this.positionY >= 0) {
+        return this.div.html(this.template(this));
+      }
     };
 
     return Tile;
@@ -858,7 +1339,7 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
 }});
 
 window.require.define({"views/game_view": function(exports, require, module) {
-  var Crystals, GameView, Hand, Tile, template,
+  var GameView, Hand, Tile, template,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -867,8 +1348,6 @@ window.require.define({"views/game_view": function(exports, require, module) {
 
   Tile = require('models/tile');
 
-  Crystals = require('models/crystals');
-
   Hand = require('models/hand');
 
   module.exports = GameView = (function(_super) {
@@ -876,11 +1355,15 @@ window.require.define({"views/game_view": function(exports, require, module) {
     __extends(GameView, _super);
 
     function GameView() {
+      this.endTurn = __bind(this.endTurn, this);
+
+      this.changePlayer = __bind(this.changePlayer, this);
+
       this.selectTile = __bind(this.selectTile, this);
 
-      this.resetPlayers = __bind(this.resetPlayers, this);
-
       this.resizeWindow = __bind(this.resizeWindow, this);
+
+      this.init = __bind(this.init, this);
       return GameView.__super__.constructor.apply(this, arguments);
     }
 
@@ -889,62 +1372,46 @@ window.require.define({"views/game_view": function(exports, require, module) {
     GameView.prototype.className = 'game-page';
 
     GameView.prototype.initialize = function() {
-      var col, row, tile, _i, _j, _k, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5,
-        _this = this;
       $(window).on('viewportchanged', this.resizeWindow);
-      Handlebars.registerHelper('positionLeft', function(tile) {
-        return tile.attributes.positionX * (_this.tileWidth * .75);
-      });
-      Handlebars.registerHelper('positionTop', function(tile) {
-        return (tile.attributes.positionY + (tile.attributes.positionX % 2 === 0 ? 0.5 : 0)) * _this.tileHeight;
-      });
-      this.configRows = Math.ceil(Math.random() * 4 + 4);
-      this.configCols = Math.ceil(Math.random() * 4 + 8);
+      this.tileWidth = 240;
+      return this.tileHeight = 210;
+    };
+
+    GameView.prototype.init = function() {
+      var tile, _i, _len, _ref;
       this.rows = 0;
       this.cols = 0;
-      this.tileWidth = 240;
-      this.tileHeight = 210;
-      this.model.attributes.tiles = [];
-      for (row = _i = 0, _ref = this.configRows; 0 <= _ref ? _i <= _ref : _i >= _ref; row = 0 <= _ref ? ++_i : --_i) {
-        for (col = _j = 0, _ref1 = this.configCols; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
-          tile = new Tile();
-          tile.update({
-            positionX: col,
-            positionY: row
-          });
-          this.model.attributes.tiles.push(tile);
+      if (this.model.tiles.length > 0) {
+        _ref = this.model.tiles;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          tile = _ref[_i];
+          this.rows = tile.positionY > this.rows ? tile.positionY : this.rows;
+          this.cols = tile.positionX > this.cols ? tile.positionX : this.cols;
         }
-      }
-      this.resetPlayers();
-      if (((_ref2 = this.model) != null ? (_ref3 = _ref2.attributes) != null ? (_ref4 = _ref3.tiles) != null ? _ref4.length : void 0 : void 0 : void 0) > 0) {
-        _ref5 = this.model.attributes.tiles;
-        for (_k = 0, _len = _ref5.length; _k < _len; _k++) {
-          tile = _ref5[_k];
-          this.rows = tile.attributes.positionY > this.rows ? tile.attributes.positionY : this.rows;
-          this.cols = tile.attributes.positionX > this.cols ? tile.attributes.positionX : this.cols;
-        }
-      } else {
-        console.log('Something really bad happened..');
       }
       this.rows += 1;
-      return this.cols += 1;
+      this.cols += 1;
+      window.me = this.model.me;
+      return this.render();
     };
 
     GameView.prototype.render = function() {
-      var event, tile, _i, _len, _ref, _ref1, _ref2, _ref3,
+      var event, tile, _i, _len, _ref,
         _this = this;
       $('#page-container').html('');
       this.$el.appendTo('#page-container');
       this.$el.html(this.template(this.model));
+      $('.current-user-name').html(this.model.me.name);
+      $('.change-player').click(this.changePlayer);
+      $('.end-turn').click(this.endTurn);
       this.hitareas = new Raphael('map-overlay');
-      if (((_ref = this.model) != null ? (_ref1 = _ref.attributes) != null ? (_ref2 = _ref1.tiles) != null ? _ref2.length : void 0 : void 0 : void 0) > 0) {
-        _ref3 = this.model.attributes.tiles;
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          tile = _ref3[_i];
+      if (this.model.tiles.length > 0) {
+        _ref = this.model.tiles;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          tile = _ref[_i];
           tile.createHitarea(this.hitareas);
           tile.on('selectedTile', function(selectedTile) {
-            _this.selectTile(selectedTile);
-            return _this.crystals.incrementAll();
+            return _this.selectTile(selectedTile);
           });
           tile.render();
           $('.game-map').append(tile.div);
@@ -952,10 +1419,16 @@ window.require.define({"views/game_view": function(exports, require, module) {
       } else {
         console.log('Something really bad happened..');
       }
-      this.crystals = new Crystals();
-      this.crystals.update('div', $('.crystals-holder'));
+      $('.crystals-holder').html('');
+      this.crystals = this.model.me.crystals;
+      this.crystals.update({
+        div: $('.crystals-holder')
+      });
       this.hand = new Hand();
-      this.hand.update('div', $('.hand-holder'));
+      this.hand.update({
+        cards: this.model.me.hand,
+        div: $('.hand-holder')
+      });
       event = document.createEvent('Event');
       event.initEvent('viewportchanged', true, true);
       event.width = window.viewportWidth;
@@ -1047,32 +1520,6 @@ window.require.define({"views/game_view": function(exports, require, module) {
       return this.hand.render();
     };
 
-    GameView.prototype.resetPlayers = function() {
-      var card, col, player, players, row, tile, _i, _len, _ref, _results;
-      players = ['blue', 'gray', 'orange', 'yellow'];
-      _ref = this.model.attributes.tiles;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        tile = _ref[_i];
-        row = tile.attributes.positionY;
-        col = tile.attributes.positionX;
-        if (Math.floor(Math.random() * 30) === 0) {
-          player = {
-            name: "dude",
-            color: players[Math.floor(Math.random() * players.length)]
-          };
-        } else {
-          player = false;
-        }
-        card = ((row + 2) % 5) + ((col + 2) % 5) === 0;
-        _results.push(tile.update({
-          player: player,
-          card: card
-        }));
-      }
-      return _results;
-    };
-
     GameView.prototype.selectTile = function(tile) {
       var str;
       str = "";
@@ -1085,6 +1532,14 @@ window.require.define({"views/game_view": function(exports, require, module) {
       if (str.length > 0) {
         return console.log(str);
       }
+    };
+
+    GameView.prototype.changePlayer = function() {
+      return this.model.changePlayer();
+    };
+
+    GameView.prototype.endTurn = function() {
+      return this.model.endTurn();
     };
 
     return GameView;
@@ -1184,12 +1639,12 @@ window.require.define({"views/templates/card": function(exports, require, module
     var buffer = "", stack1, foundHelper, self=this, functionType="function", helperMissing=helpers.helperMissing, undef=void 0, escapeExpression=this.escapeExpression;
 
 
-    buffer += "<div class=\"playing-card\">\n  <h1>";
+    buffer += "<div class=\"playing-card playing-card-";
     foundHelper = helpers.type;
     stack1 = foundHelper || depth0.type;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "type", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "</h1>\n</div>";
+    buffer += escapeExpression(stack1) + "\">\n  &nbsp;\n</div>";
     return buffer;});
 }});
 
@@ -1239,7 +1694,7 @@ window.require.define({"views/templates/game": function(exports, require, module
     var foundHelper, self=this;
 
 
-    return "<div class=\"map-holder\">\n  <div class=\"game-board game-map\">\n  </div>\n  <div class=\"game-board map-overlay\" id=\"map-overlay\" style=\"width: 1000px; height: 1000px;\">\n  </div>\n</div>\n<div class=\"crystals-holder\">\n  \n</div>\n<div class=\"hand-holder\">\n  \n</div>";});
+    return "<div class=\"map-holder\">\n  <div class=\"game-board game-map\">\n  </div>\n  <div class=\"game-board map-overlay\" id=\"map-overlay\" style=\"width: 1000px; height: 1000px;\">\n  </div>\n</div>\n<div class=\"crystals-holder\">\n  \n</div>\n<div class=\"hand-holder\">\n  \n</div>\n<div style=\"position: absolute; top: 0px; left: 0px;\">\n  <div>You are: <span class=\"current-user-name\"></span></div>\n  <div><input type=\"button\" value=\"End Turn\" class=\"end-turn\" /></div>\n  <div><input type=\"button\" value=\"Change Player\" class=\"change-player\" /></div>\n</div>";});
 }});
 
 window.require.define({"views/templates/game_setup": function(exports, require, module) {

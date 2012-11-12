@@ -14,6 +14,13 @@ module.exports = class Application extends Backbone.Model
       event = e.originalEvent
       window.viewportWidth = event.width
       window.viewportHeight = event.height
+    
+    @tileWidth = 240
+    @tileHeight = 210
+    Handlebars.registerHelper 'positionLeft', (tile) =>
+      tile.attributes.positionX * (@tileWidth * .75)
+    Handlebars.registerHelper 'positionTop', (tile) =>
+      (tile.attributes.positionY + (if tile.attributes.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
 
   start: ->
     @playerId = ''
@@ -22,6 +29,11 @@ module.exports = class Application extends Backbone.Model
 
   connectSocket: ->
     @socket = io.connect window.location.href
+    
+    @showGame()
+    
+    return
+    
     @socket.on 'intro.show', =>
       @intro()
     @socket.on 'gameSetup.show', (gameData) =>
@@ -68,4 +80,7 @@ module.exports = class Application extends Backbone.Model
   showGame: ->
     @model = new Game(@socket)
     @gameView = new GameView({@model})
-    @gameView.render()
+    
+    @model.on 'game.started', @gameView.init
+    @model.on 'game.rerender', @gameView.init
+    @model.init()

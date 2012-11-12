@@ -14,37 +14,20 @@ module.exports = class Crystals extends Backbone.Model
   
   defaults:
     player: ''
-    crystals: [[], [], [], [], [], []]
-    lastRender: [-1, 0, 0, 0, 0, 0]
-    left: 0
-    right: 0
-    top: 0
-    width: 1
-    height: 1
 
   initialize: ->
     @div = $ '<div>'
     @width = 1
     @height = 1
     
-    for prop, val of @attributes
-      @[prop] = val
-    
-    @crystals[0].push new Crystal()
-    @crystals[0].push new Crystal()
-    @crystals[0].push new Crystal()
-    @crystals[2].push new Crystal()
-    @crystals[2].push new Crystal()
-    @crystals[2].push new Crystal()
-    @crystals[3].push new Crystal()
-    @crystals[3].push new Crystal()
-    @crystals[3].push new Crystal()
-    @crystals[3].push new Crystal()
-    @crystals[3].push new Crystal()
-    @crystals[4].push new Crystal()
-    @crystals[4].push new Crystal()
-    @crystals[4].push new Crystal()
-    @crystals[5].push new Crystal()
+    @player = ''
+    @crystals = [[], [], [], [], [], []]
+    @lastRender = [-1, 0, 0, 0, 0, 0]
+    @left = 0
+    @right = 0
+    @top = 0
+    @width = 1
+    @height = 1
     
     for i in [0..@crystals.length-1]
       for crystal in @crystals[i]
@@ -59,8 +42,6 @@ module.exports = class Crystals extends Backbone.Model
       props[prop] = val
     
     for prop, val of props
-      if prop? and @attributes.hasOwnProperty prop
-        @attributes[prop] = val
       @[prop] = val
     
     @render()

@@ -1,6 +1,5 @@
 template = require 'views/templates/game'
 Tile = require 'models/tile'
-Crystals = require 'models/crystals'
 Hand = require 'models/hand'
 
 module.exports = class GameView extends Backbone.View
@@ -10,63 +9,54 @@ module.exports = class GameView extends Backbone.View
   initialize: ->
     $(window).on 'viewportchanged', @resizeWindow
     
-    Handlebars.registerHelper 'positionLeft', (tile) =>
-      tile.attributes.positionX * (@tileWidth * .75)
-    Handlebars.registerHelper 'positionTop', (tile) =>
-      (tile.attributes.positionY + (if tile.attributes.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
-    
-    @configRows = Math.ceil Math.random()*4 + 4
-    @configCols = Math.ceil Math.random()*4 + 8
-    
-    @rows = 0
-    @cols = 0
     @tileWidth = 240
     @tileHeight = 210
-    
-    @model.attributes.tiles = []
-    for row in [0..@configRows]
-      for col in [0..@configCols]
-        tile = new Tile()
-        tile.update positionX: col, positionY: row
-        @model.attributes.tiles.push tile
-    
-    @resetPlayers()
-    
-    if @model?.attributes?.tiles?.length > 0
-      for tile in @model.attributes.tiles
-        @rows = if tile.attributes.positionY > @rows then tile.attributes.positionY else @rows
-        @cols = if tile.attributes.positionX > @cols then tile.attributes.positionX else @cols
-    else
-      console.log 'Something really bad happened..'
-    
+
+  init: =>
+    @rows = 0
+    @cols = 0
+    if @model.tiles.length > 0
+      for tile in @model.tiles
+        @rows = if tile.positionY > @rows then tile.positionY else @rows
+        @cols = if tile.positionX > @cols then tile.positionX else @cols
     @rows += 1
     @cols += 1
+    
+    window.me = @model.me
+    @render()
 
   render: ->
     $('#page-container').html ''
     @$el.appendTo('#page-container')
     @$el.html(@template(@model))
     
+    $('.current-user-name').html @model.me.name
+    $('.change-player').click @changePlayer
+    $('.end-turn').click @endTurn
+    
     @hitareas = new Raphael 'map-overlay'
     
-    if @model?.attributes?.tiles?.length > 0
-      for tile in @model.attributes.tiles
+    if @model.tiles.length > 0
+      for tile in @model.tiles
         tile.createHitarea @hitareas
         tile.on 'selectedTile', (selectedTile) =>
           @selectTile selectedTile
-          @crystals.incrementAll()
-          #@resetPlayers()
+          #@crystals.incrementAll()
         
         tile.render()
         $('.game-map').append tile.div
     else
       console.log 'Something really bad happened..'
     
-    @crystals = new Crystals()
-    @crystals.update 'div', $('.crystals-holder')
+    $('.crystals-holder').html('')
+    @crystals = @model.me.crystals
+    @crystals.update
+      div: $('.crystals-holder')
     
     @hand = new Hand()
-    @hand.update 'div', $('.hand-holder')
+    @hand.update
+      cards: @model.me.hand
+      div: $('.hand-holder')
     
     event = document.createEvent 'Event'
     event.initEvent 'viewportchanged', true, true
@@ -154,21 +144,6 @@ module.exports = class GameView extends Backbone.View
       isLandscape: @isLandscape
     @hand.render()
 
-  resetPlayers: () =>
-    players = ['blue', 'gray', 'orange', 'yellow']
-    for tile in @model.attributes.tiles
-      row = tile.attributes.positionY
-      col = tile.attributes.positionX
-      if Math.floor(Math.random()*30) == 0
-        player = 
-          name: "dude"
-          color: players[Math.floor(Math.random()*players.length)]
-      else
-        player = false
-      card = ((row+2) % 5) + ((col+2) % 5) == 0
-      
-      tile.update player: player, card: card
-
   selectTile: (tile) =>
     str = ""
     if tile.attributes.player
@@ -179,3 +154,9 @@ module.exports = class GameView extends Backbone.View
     
     if str.length > 0
       console.log str
+  
+  changePlayer: () =>
+    @model.changePlayer()
+
+  endTurn: () =>
+    @model.endTurn()
