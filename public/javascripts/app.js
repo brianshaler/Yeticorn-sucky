@@ -101,6 +101,7 @@ window.require.define({"application": function(exports, require, module) {
       var _this = this;
       this.enteredName = _.once(this.enteredName);
       this.clickedPlay = _.once(this.clickedPlay);
+      this.clickedStart = _.once(this.clickedStart);
       $(window).on("viewportchanged", function(e) {
         var event;
         event = e.originalEvent;
@@ -188,11 +189,19 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.clickedStart = function() {
-      return this.showGame();
+      var _this = this;
+      this.socket.emit('gameSetup.submit', {
+        gameId: this.gameData.gameId
+      });
+      return this.socket.on('gameSetup.complete', function(game) {
+        return _this.showGame(game);
+      });
     };
 
-    Application.prototype.showGame = function() {
-      this.model = new Game(this.socket);
+    Application.prototype.showGame = function(gameData) {
+      this.model = new Game(gameData, {
+        socket: this.socket
+      });
       this.gameView = new GameView({
         model: this.model
       });
@@ -535,6 +544,28 @@ window.require.define({"models/game": function(exports, require, module) {
       this.cardsOnBoard();
       this.dealCards();
       return this.placePlayers();
+    };
+
+    Game.prototype.initialize2 = function(attributes, options) {
+      var obj, tile, _i, _len, _ref, _results;
+      this.socket = options.socket;
+      _ref = attributes.tiles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        obj = _ref[_i];
+        tile = new Tile();
+        tile.positionX = obj.positionX;
+        tile.positionY = obj.positionY;
+        if (obj.card) {
+          tile.card = obj.card;
+        }
+        if (obj.player) {
+          _results.push(tile.player = obj.player);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     Game.prototype.init = function() {
@@ -1502,6 +1533,9 @@ window.require.define({"views/game_view": function(exports, require, module) {
     };
 
     GameView.prototype.renderCrystals = function() {
+      if (!this.crystals) {
+        return;
+      }
       this.crystals.update({
         width: this.crystalsWidth,
         height: this.crystalsHeight,

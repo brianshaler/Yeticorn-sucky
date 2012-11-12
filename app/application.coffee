@@ -10,6 +10,7 @@ module.exports = class Application extends Backbone.Model
   initialize: ->
     @enteredName = _.once @enteredName
     @clickedPlay = _.once @clickedPlay
+    @clickedStart = _.once @clickedStart
     $(window).on "viewportchanged", (e) ->
       event = e.originalEvent
       window.viewportWidth = event.width
@@ -75,12 +76,13 @@ module.exports = class Application extends Backbone.Model
       @clickedStart()
 
   clickedStart: ->
-    @showGame()
+    @socket.emit 'gameSetup.submit', {gameId: @gameData.gameId}
+    @socket.on 'gameSetup.complete', (game) =>
+      @showGame(game)
 
-  showGame: ->
-    @model = new Game(@socket)
+  showGame: (gameData) ->
+    @model = new Game(gameData, {socket: @socket})
     @gameView = new GameView({@model})
-    
     @model.on 'game.started', @gameView.init
     @model.on 'game.rerender', @gameView.init
     @model.init()

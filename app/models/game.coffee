@@ -35,6 +35,17 @@ module.exports = class Game extends Backbone.Model
     @dealCards()
     @placePlayers()
   
+  initialize2: (attributes, options) ->
+    @socket = options.socket
+    for obj in attributes.tiles
+      tile = new Tile()
+      tile.positionX = obj.positionX
+      tile.positionY = obj.positionY
+      if obj.card
+        tile.card = obj.card
+      if obj.player
+        tile.player = obj.player
+
   init: =>
     @trigger 'game.started'
   
@@ -157,4 +168,3 @@ module.exports = class Game extends Backbone.Model
     @currentPlayer.addCardToHand @cards.pop()
     @currentPlayer.crystals.incrementAll()
     @trigger 'game.rerender'
-    
