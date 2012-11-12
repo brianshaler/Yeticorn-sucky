@@ -11,7 +11,7 @@ module.exports = class Player extends Backbone.Model
     @weapons = []
     @spells = []
     
-    @crystals.crystals[Math.floor(Math.random()*5)].push new Crystal()
+    @crystals.crystals[Math.floor(Math.random()*5)].push new Crystal {name: 'Crystal'}
     
   addCardToHand: (card) ->
     @hand.push card

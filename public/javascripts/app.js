@@ -260,6 +260,16 @@ window.require.define({"models/card": function(exports, require, module) {
       type: ''
     };
 
+    Card.prototype.initialize = function(params) {
+      var key, val, _results;
+      _results = [];
+      for (key in params) {
+        val = params[key];
+        _results.push(this[key] = val);
+      }
+      return _results;
+    };
+
     Card.prototype.render = function() {
       if (!(this.div != null)) {
         this.div = $('<div>');
@@ -288,9 +298,16 @@ window.require.define({"models/crystal_card": function(exports, require, module)
       return Crystal.__super__.constructor.apply(this, arguments);
     }
 
-    Crystal.prototype.initialize = function() {
+    Crystal.prototype.initialize = function(params) {
+      Crystal.__super__.initialize.call(this, params);
       this.type = 'crystal';
-      return this.energy = 0;
+      this.name = 'Crystal';
+      this.energy = 0;
+      this.damage = 0;
+      this.description = 'bling bling';
+      this.playCost = 0;
+      this.useCost = 0;
+      return this.filename = 'crystal';
     };
 
     return Crystal;
@@ -618,7 +635,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'weapon',
-        name: 'Frying Pan',
+        name: 'Pot',
         damage: 3,
         description: 'Stolen from the kitchen of a mad chef the magical Frying Pan is bloody',
         playCost: 3,
@@ -631,14 +648,6 @@ window.require.define({"models/game": function(exports, require, module) {
         description: 'Set the Ray Gun to stun to freeze and hurt your opponent',
         playCost: 3,
         useCost: 3
-      });
-      deck.push({
-        type: 'weapon',
-        name: 'Bowling Ball',
-        damage: 4,
-        description: 'Be sure to throw this directly at the unicorn',
-        playCost: 4,
-        useCost: 4
       });
       deck.push({
         type: 'weapon',
@@ -657,16 +666,8 @@ window.require.define({"models/game": function(exports, require, module) {
         useCost: 6
       });
       deck.push({
-        type: 'weapon',
-        name: 'Rusty Fork',
-        damage: 1,
-        description: 'poop',
-        playCost: 0,
-        useCost: 1
-      });
-      deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -674,7 +675,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -682,7 +683,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -690,7 +691,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -698,7 +699,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -706,7 +707,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -714,7 +715,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -754,14 +755,6 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'weapon',
-        name: 'Bowling Ball',
-        damage: 4,
-        description: 'Be sure to throw this directly at the unicorn',
-        playCost: 4,
-        useCost: 4
-      });
-      deck.push({
-        type: 'weapon',
         name: 'Scissors',
         damage: 5,
         description: 'Be sure to RUN with Scissors before and after cutting off your opponents ear',
@@ -777,16 +770,8 @@ window.require.define({"models/game": function(exports, require, module) {
         useCost: 6
       });
       deck.push({
-        type: 'weapon',
-        name: 'Rusty Fork',
-        damage: 1,
-        description: 'poop',
-        playCost: 0,
-        useCost: 1
-      });
-      deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -794,7 +779,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -802,7 +787,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -810,7 +795,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -818,7 +803,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -826,7 +811,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -834,7 +819,7 @@ window.require.define({"models/game": function(exports, require, module) {
       });
       deck.push({
         type: 'spell',
-        name: 'bounce',
+        name: 'the jesus',
         damage: 0,
         description: 'poop',
         playCost: 2,
@@ -854,6 +839,7 @@ window.require.define({"models/game": function(exports, require, module) {
       _results = [];
       for (_j = 0, _len = deck.length; _j < _len; _j++) {
         obj = deck[_j];
+        obj.filename = obj.name.toLowerCase().replace(/[^a-z]/ig, "");
         switch (obj.type) {
           case 'weapon':
             card = new Weapon(obj);
@@ -930,7 +916,8 @@ window.require.define({"models/game": function(exports, require, module) {
             attempts = 999999;
           }
           attempts++;
-          console.log("1 Add player " + player.name + " to tile " + tile.positionX + "x" + tile.positionY);
+          console.log("1 Add player " + player.name + " to tile:");
+          console.log("" + tile.positionX + "x" + tile.positionY);
         }
         _results.push(this.addPlayerToTile(player, tile));
       }
@@ -946,7 +933,8 @@ window.require.define({"models/game": function(exports, require, module) {
           _tile.player = null;
         }
       }
-      console.log("Add player " + player.name + " to tile " + tile.positionX + "x" + tile.positionY);
+      console.log("Add player " + player.name + " to tile:");
+      console.log("" + tile.positionX + "x" + tile.positionY);
       return tile.update({
         player: player
       });
@@ -1042,12 +1030,6 @@ window.require.define({"models/hand": function(exports, require, module) {
         val = _ref[prop];
         this[prop] = val;
       }
-      this.cards.push(new Crystal());
-      this.cards.push(new Crystal());
-      this.cards.push(new Weapon());
-      this.cards.push(new Spell());
-      this.cards.push(new Crystal());
-      this.cards.push(new Weapon());
       return this.cached = false;
     };
 
@@ -1158,7 +1140,9 @@ window.require.define({"models/player": function(exports, require, module) {
       this.crystals = new Crystals();
       this.weapons = [];
       this.spells = [];
-      return this.crystals.crystals[Math.floor(Math.random() * 5)].push(new Crystal());
+      return this.crystals.crystals[Math.floor(Math.random() * 5)].push(new Crystal({
+        name: 'Crystal'
+      }));
     };
 
     Player.prototype.addCardToHand = function(card) {
@@ -1186,7 +1170,8 @@ window.require.define({"models/spell_card": function(exports, require, module) {
       return Spell.__super__.constructor.apply(this, arguments);
     }
 
-    Spell.prototype.initialize = function() {
+    Spell.prototype.initialize = function(params) {
+      Spell.__super__.initialize.call(this, params);
       return this.type = 'spell';
     };
 
@@ -1314,7 +1299,8 @@ window.require.define({"models/weapon_card": function(exports, require, module) 
       return Weapon.__super__.constructor.apply(this, arguments);
     }
 
-    Weapon.prototype.initialize = function() {
+    Weapon.prototype.initialize = function(params) {
+      Weapon.__super__.initialize.call(this, params);
       return this.type = 'weapon';
     };
 
@@ -1678,7 +1664,17 @@ window.require.define({"views/templates/card": function(exports, require, module
     stack1 = foundHelper || depth0.type;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "type", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "\">\n  &nbsp;\n</div>";
+    buffer += escapeExpression(stack1) + "\">\n  <img src=\"/images/cards/";
+    foundHelper = helpers.filename;
+    stack1 = foundHelper || depth0.filename;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "filename", { hash: {} }); }
+    buffer += escapeExpression(stack1) + ".png?name=";
+    foundHelper = helpers.name;
+    stack1 = foundHelper || depth0.name;
+    if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
+    else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "name", { hash: {} }); }
+    buffer += escapeExpression(stack1) + "\" />\n</div>";
     return buffer;});
 }});
 

@@ -33,12 +33,6 @@ module.exports = class Crystals extends Backbone.Model
     for prop, val of @attributes
       @[prop] = val
     
-    @cards.push new Crystal()
-    @cards.push new Crystal()
-    @cards.push new Weapon()
-    @cards.push new Spell()
-    @cards.push new Crystal()
-    @cards.push new Weapon()
     @cached = false
 
   update: (prop, val) ->

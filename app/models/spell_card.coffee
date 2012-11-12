@@ -2,5 +2,6 @@ Card = require 'models/card'
 
 module.exports = class Spell extends Card
   
-  initialize: ->
+  initialize: (params) ->
+    super params
     @type = 'spell'

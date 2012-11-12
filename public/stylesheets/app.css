@@ -647,7 +647,6 @@ h1 {
 }
 .game-page .playing-card {
   position: absolute;
-  border: solid 10px #fff;
   width: 142px;
   height: 223px;
   -webkit-border-radius: 10px;
