@@ -27,3 +27,5 @@ TileSchema.statics.generateBoard = (gameId, cb) ->
         tiles.push tile
   
   cb null, tiles
+
+mongoose.model 'Tile', TileSchema

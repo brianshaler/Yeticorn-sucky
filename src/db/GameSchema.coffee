@@ -2,12 +2,13 @@ mongoose = require 'mongoose'
 
 module.exports = GameSchema = new mongoose.Schema
   gameId: String
+  creator: { type: mongoose.Schema.Types.ObjectId, ref: 'Player' }
   players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }]
   currentPlayer: { type: mongoose.Schema.Types.ObjectId, ref: 'Player' }
   cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Cards' }]
   tiles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tiles' }]
 
-GameSchema.methods.init = (cb) ->
+GameSchema.methods.initGame = (cb) ->
   Card = mongoose.model 'Card'
   Tile = mongoose.model 'Tile'
   
@@ -41,5 +42,4 @@ GameSchema.methods.startGame = (cb) ->
     cb
 
     
-
-
+mongoose.model 'Game', GameSchema

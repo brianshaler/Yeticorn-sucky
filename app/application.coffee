@@ -8,9 +8,18 @@ GameView = require 'views/game_view'
 module.exports = class Application extends Backbone.Model
 
   initialize: ->
+    @playerId = ''
+    @gameId = ''
+    @cookieId = Cookie.get 'playerId'
     @enteredName = _.once @enteredName
     @clickedPlay = _.once @clickedPlay
     @clickedStart = _.once @clickedStart
+    
+    if window.location.hash.toString().length > 1
+      @gameId = window.location.hash.toString().substr(1)
+    @setupWindow()
+
+  setupWindow: ->
     $(window).on "viewportchanged", (e) ->
       event = e.originalEvent
       window.viewportWidth = event.width
@@ -24,24 +33,35 @@ module.exports = class Application extends Backbone.Model
       (tile.attributes.positionY + (if tile.attributes.positionX % 2 == 0 then 0.5 else 0)) * @tileHeight
 
   start: ->
-    @playerId = ''
     @viewport = new Viewporter 'outer-container'
     @connectSocket()
 
   connectSocket: ->
     @socket = io.connect window.location.href
     
-    @showGame()
-    
-    return
-    
     @socket.on 'intro.show', =>
       @intro()
-    @socket.on 'gameSetup.show', (gameData) =>
-      @gameData = gameData
-      @gameSetup()
+    @socket.on 'game.show', @receiveGameData
+    @socket.on 'game.found', @receiveGameData
+    @socket.on 'game.notfound', (data) =>
+      console.log "Game not found!"
+      window.location.hash = ""
+      @showIntro()
+    @socket.on 'player.ready', (data) =>
+      if data?._id? and data._id
+        @playerId = data._id
+        console.log 'setting cookie playerId='+@playerId
+        Cookie.set 'playerId', @playerId, 24*365*5
 
   intro: ->
+    if @gameId.length > 0
+      console.log "look up gameId #{@gameId}"
+      @socket.emit 'game.find', @gameId
+    else
+      console.log "Just show intro #{window.location.hash}"
+      @showIntro()
+
+  showIntro: ->
     @introView = new IntroView
     @introView.render()
     @introView.on 'clickedPlay', =>
@@ -57,27 +77,34 @@ module.exports = class Application extends Backbone.Model
       @enteredName()
 
   enteredName: ->
-    gameId = null
-    if window.location.hash.toString().length > 1
-      gameId = window.location.hash.toString().substr(1)
-    @socket.on 'playerSetup.complete', (data) =>
-      console.log 'playerSetup.complete'
-      if data?.playerId?
-        @playerId = data.playerId
-        console.log data
-    @socket.emit 'playerSetup.submit', @playerSetupView.getName(), gameId
+    @socket.emit 'player.create', @playerSetupView.getName(), @gameId
+
+  receiveGameData: (gameData) =>
+    @gameData = gameData
+    console.log @gameData
+    if @cookieId and @gameData.gameId
+      @socket.emit 'player.join', @cookieId, @gameData.gameId
+      @cookieId = ''
+      @socket.on 'player.joined', ->
+        @gameSetup()
+    else
+      @gameSetup()
 
   gameSetup: ->
     window.location.hash = @gameData.gameId
     @gameSetupView = new GameSetupView()
     @gameSetupView.players = @gameData.players
+    @gameSetupView.playerId = @playerId
+    @gameSetupView.creator = @gameData.creator
     @gameSetupView.render()
     @gameSetupView.on 'clickedStart', =>
       @clickedStart()
+    @gameSetupView.on 'joinGame', =>
+      @socket.emit 'player.create', @gameSetupView.getName(), @gameId
 
   clickedStart: ->
-    @socket.emit 'gameSetup.submit', {gameId: @gameData.gameId}
-    @socket.on 'gameSetup.complete', (game) =>
+    @socket.emit 'game.create', {gameId: @gameData.gameId}
+    @socket.on 'game.complete', (game) =>
       @showGame(game)
 
   showGame: (gameData) ->

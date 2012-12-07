@@ -76,6 +76,7 @@
 
 window.require.define({"application": function(exports, require, module) {
   var Application, Game, GameSetupView, GameView, IntroView, PlayerSetupView,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -94,14 +95,25 @@ window.require.define({"application": function(exports, require, module) {
     __extends(Application, _super);
 
     function Application() {
+      this.receiveGameData = __bind(this.receiveGameData, this);
       return Application.__super__.constructor.apply(this, arguments);
     }
 
     Application.prototype.initialize = function() {
-      var _this = this;
+      this.playerId = '';
+      this.gameId = '';
+      this.cookieId = Cookie.get('playerId');
       this.enteredName = _.once(this.enteredName);
       this.clickedPlay = _.once(this.clickedPlay);
       this.clickedStart = _.once(this.clickedStart);
+      if (window.location.hash.toString().length > 1) {
+        this.gameId = window.location.hash.toString().substr(1);
+      }
+      return this.setupWindow();
+    };
+
+    Application.prototype.setupWindow = function() {
+      var _this = this;
       $(window).on("viewportchanged", function(e) {
         var event;
         event = e.originalEvent;
@@ -119,7 +131,6 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.start = function() {
-      this.playerId = '';
       this.viewport = new Viewporter('outer-container');
       return this.connectSocket();
     };
@@ -127,18 +138,36 @@ window.require.define({"application": function(exports, require, module) {
     Application.prototype.connectSocket = function() {
       var _this = this;
       this.socket = io.connect(window.location.href);
-      this.showGame();
-      return;
       this.socket.on('intro.show', function() {
         return _this.intro();
       });
-      return this.socket.on('gameSetup.show', function(gameData) {
-        _this.gameData = gameData;
-        return _this.gameSetup();
+      this.socket.on('game.show', this.receiveGameData);
+      this.socket.on('game.found', this.receiveGameData);
+      this.socket.on('game.notfound', function(data) {
+        console.log("Game not found!");
+        window.location.hash = "";
+        return _this.showIntro();
+      });
+      return this.socket.on('player.ready', function(data) {
+        if (((data != null ? data._id : void 0) != null) && data._id) {
+          _this.playerId = data._id;
+          console.log('setting cookie playerId=' + _this.playerId);
+          return Cookie.set('playerId', _this.playerId, 24 * 365 * 5);
+        }
       });
     };
 
     Application.prototype.intro = function() {
+      if (this.gameId.length > 0) {
+        console.log("look up gameId " + this.gameId);
+        return this.socket.emit('game.find', this.gameId);
+      } else {
+        console.log("Just show intro " + window.location.hash);
+        return this.showIntro();
+      }
+    };
+
+    Application.prototype.showIntro = function() {
       var _this = this;
       this.introView = new IntroView;
       this.introView.render();
@@ -161,20 +190,21 @@ window.require.define({"application": function(exports, require, module) {
     };
 
     Application.prototype.enteredName = function() {
-      var gameId,
-        _this = this;
-      gameId = null;
-      if (window.location.hash.toString().length > 1) {
-        gameId = window.location.hash.toString().substr(1);
+      return this.socket.emit('player.create', this.playerSetupView.getName(), this.gameId);
+    };
+
+    Application.prototype.receiveGameData = function(gameData) {
+      this.gameData = gameData;
+      console.log(this.gameData);
+      if (this.cookieId && this.gameData.gameId) {
+        this.socket.emit('player.join', this.cookieId, this.gameData.gameId);
+        this.cookieId = '';
+        return this.socket.on('player.joined', function() {
+          return this.gameSetup();
+        });
+      } else {
+        return this.gameSetup();
       }
-      this.socket.on('playerSetup.complete', function(data) {
-        console.log('playerSetup.complete');
-        if ((data != null ? data.playerId : void 0) != null) {
-          _this.playerId = data.playerId;
-          return console.log(data);
-        }
-      });
-      return this.socket.emit('playerSetup.submit', this.playerSetupView.getName(), gameId);
     };
 
     Application.prototype.gameSetup = function() {
@@ -182,18 +212,23 @@ window.require.define({"application": function(exports, require, module) {
       window.location.hash = this.gameData.gameId;
       this.gameSetupView = new GameSetupView();
       this.gameSetupView.players = this.gameData.players;
+      this.gameSetupView.playerId = this.playerId;
+      this.gameSetupView.creator = this.gameData.creator;
       this.gameSetupView.render();
-      return this.gameSetupView.on('clickedStart', function() {
+      this.gameSetupView.on('clickedStart', function() {
         return _this.clickedStart();
+      });
+      return this.gameSetupView.on('joinGame', function() {
+        return _this.socket.emit('player.create', _this.gameSetupView.getName(), _this.gameId);
       });
     };
 
     Application.prototype.clickedStart = function() {
       var _this = this;
-      this.socket.emit('gameSetup.submit', {
+      this.socket.emit('game.create', {
         gameId: this.gameData.gameId
       });
-      return this.socket.on('gameSetup.complete', function(game) {
+      return this.socket.on('game.complete', function(game) {
         return _this.showGame(game);
       });
     };
@@ -1330,7 +1365,8 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
     GameSetupView.prototype.className = 'game-setup setup';
 
     GameSetupView.prototype.events = {
-      'click .start': 'onClickedStart'
+      'click .start': 'onClickedStart',
+      'submit form': 'onJoinForm'
     };
 
     GameSetupView.prototype.onClickedStart = function(e) {
@@ -1339,12 +1375,33 @@ window.require.define({"views/game_setup_view": function(exports, require, modul
       return false;
     };
 
+    GameSetupView.prototype.onJoinForm = function(e) {
+      this.trigger('joinGame');
+      e.preventDefault();
+      return false;
+    };
+
+    GameSetupView.prototype.getName = function() {
+      return $('.player-name').val();
+    };
+
     GameSetupView.prototype.render = function() {
-      var html;
+      var html,
+        _this = this;
       $('#page-container').html('');
       this.$el.appendTo('#page-container');
+      $.each(this.players, function(index, player) {
+        if (player._id === _this.creator._id) {
+          player.isCreator = true;
+        }
+        if (player._id === _this.playerId) {
+          return player.isMe = true;
+        }
+      });
       html = this.template({
-        players: this.players
+        players: this.players,
+        creator: this.creator,
+        playerId: this.playerId
       });
       return this.$el.html(html);
     };
@@ -1734,16 +1791,40 @@ window.require.define({"views/templates/game_setup": function(exports, require, 
 
   function program1(depth0,data) {
     
-    var buffer = "", stack1;
-    buffer += "\n      <li>";
+    var buffer = "", stack1, stack2;
+    buffer += "\n    <li>";
     foundHelper = helpers.name;
     stack1 = foundHelper || depth0.name;
     if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
     else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "name", { hash: {} }); }
-    buffer += escapeExpression(stack1) + "</li>\n    ";
+    buffer += escapeExpression(stack1);
+    foundHelper = helpers.isCreator;
+    stack1 = foundHelper || depth0.isCreator;
+    stack2 = helpers['if'];
+    tmp1 = self.program(2, program2, data);
+    tmp1.hash = {};
+    tmp1.fn = tmp1;
+    tmp1.inverse = self.program(4, program4, data);
+    stack1 = stack2.call(depth0, stack1, tmp1);
+    if(stack1 || stack1 === 0) { buffer += stack1; }
+    buffer += "</li>\n  ";
     return buffer;}
+  function program2(depth0,data) {
+    
+    
+    return " (creator)";}
 
-    buffer += "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<form>\n  <ul>\n    ";
+  function program4(depth0,data) {
+    
+    
+    return " (player)";}
+
+  function program6(depth0,data) {
+    
+    
+    return "\n<form class=\"join-form\" method=\"post\" action=\"/\">\n  <input type=\"text\" class=\"player-name\" placeholder=\"Player Name\" />\n  <input type=\"submit\" value=\"Join &raquo;\" />\n</form>\n";}
+
+    buffer += "<header>\n  <h1>Get Ready!</h1>\n</header>\n\n<ul>\n  ";
     foundHelper = helpers.players;
     stack1 = foundHelper || depth0.players;
     stack2 = helpers.each;
@@ -1753,7 +1834,17 @@ window.require.define({"views/templates/game_setup": function(exports, require, 
     tmp1.inverse = self.noop;
     stack1 = stack2.call(depth0, stack1, tmp1);
     if(stack1 || stack1 === 0) { buffer += stack1; }
-    buffer += "\n  </ul>\n  <div>\n    <a href=\"#\" class=\"start\">Start!</a>\n  </div>\n</form>";
+    buffer += "\n</ul>\n";
+    foundHelper = helpers.playerId;
+    stack1 = foundHelper || depth0.playerId;
+    stack2 = helpers.unless;
+    tmp1 = self.program(6, program6, data);
+    tmp1.hash = {};
+    tmp1.fn = tmp1;
+    tmp1.inverse = self.noop;
+    stack1 = stack2.call(depth0, stack1, tmp1);
+    if(stack1 || stack1 === 0) { buffer += stack1; }
+    buffer += "\n<div>\n  <a href=\"#\" class=\"start\">Start!</a>\n</div>\n";
     return buffer;});
 }});
 
